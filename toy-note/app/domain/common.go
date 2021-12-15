@@ -11,3 +11,8 @@ type Common struct {
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime"`
 }
+
+type Pagination struct {
+	Page  int
+	Limit int
+}

@@ -1,5 +1,15 @@
 package domain
 
+// Post
+//
+// A data structure used for storing notes.
+// - id
+// - title
+// - content
+// - affiliate
+// - tags
+// - created_at
+// - updated_at
 type Post struct {
 	Common
 	Title     string           `gorm:"size:100;not null"`
