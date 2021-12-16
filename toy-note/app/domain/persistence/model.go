@@ -1,37 +1,47 @@
 package persistence
 
-import "time"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type UnitId struct {
 	Id uint `gorm:"primaryKey;autoIncrement"`
 }
 
-type Common struct {
-	UnitId
+type Dates struct {
 	CreatedAt time.Time `gorm:"autoCreateTime"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime"`
 }
 
+// Affiliate
 type Affiliate struct {
-	Common
-	PostID     uint   `gorm:"not null"`
-	Filename   string `gorm:"not null"`
-	Collection string `gorm:"not null"`
-	ObjectId   string `gorm:"not null"`
+	ObjectId  string `gorm:"not null"`
+	Filename  string `gorm:"not null"`
+	PostRefer uint   `gorm:"not null"`
+	Dates
 }
 
+// Tag
 type Tag struct {
-	Common
-	Name        string  `gorm:"size:100;not null;unique"`
-	Description string  `gorm:"size:100"`
-	Color       string  `gorm:"size:100"`
-	Posts       []*Post `gorm:"many2many:post_tag;constraint:OnDelete:SET_NULL;"`
+	UnitId
+	Name        string `gorm:"size:100;not null;unique"`
+	Description string `gorm:"size:100"`
+	Color       string `gorm:"size:100"`
+	Posts       []Post `gorm:"many2many:post_tag;constraint:OnDelete:SET NULL;"`
+	Dates
 }
 
+// Post
 type Post struct {
-	Common
-	Title     string       `gorm:"size:100;not null"`
-	Content   string       `gorm:"text;not null"`
-	Affiliate []*Affiliate `gorm:"polymorphic:Owner"`
-	Tags      []*Tag       `gorm:"many2many:article_tag;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	gorm.Model
+	UnitId
+	Title     string      `gorm:"size:100;not null"`
+	Subtitle  string      `gorm:"size:100"`
+	Content   string      `gorm:"text;not null"`
+	Date      time.Time   `gorm:"index;not null"`
+	Affiliate []Affiliate `gorm:"foreignKey:PostRefer"`
+	Tags      []Tag       `gorm:"many2many:article_tag;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	Dates
 }

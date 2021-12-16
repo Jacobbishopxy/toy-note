@@ -1,3 +1,4 @@
 {
-	"cSpell.words": ["Structs", "Syncer"]
+	"cSpell.words": ["Structs", "Syncer"],
+	"go.testFlags": ["-v"]
 }

@@ -19,19 +19,15 @@ const (
 	ErrorLevelStr   string = "error"
 )
 
-var (
+type ToyNoteLogger struct {
 	globalLogger *zap.Logger
-	devMode      bool = false
-)
-
-// Call it in defer
-func Sync() error {
-	return globalLogger.Sync()
+	devMode      bool
 }
+
+var TNLogger *ToyNoteLogger
 
 // Init logger
 func Init(logLevel string, logFile string, dev bool) error {
-	devMode = dev
 	var level zapcore.Level
 	switch logLevel {
 	case DebugLevelStr:
@@ -68,17 +64,27 @@ func Init(logLevel string, logFile string, dev bool) error {
 	)
 
 	var _globalLogger *zap.Logger
-	if devMode {
+	if dev {
 		_globalLogger = zap.New(core, zap.AddCaller(), zap.Development())
 	} else {
 		_globalLogger = zap.New(core)
 	}
 	zap.ReplaceGlobals(_globalLogger)
-	globalLogger = _globalLogger
+
+	TNLogger = &ToyNoteLogger{
+		globalLogger: _globalLogger,
+		devMode:      dev,
+	}
+
 	return nil
 }
 
+// Call it in defer
+func (l *ToyNoteLogger) Sync() error {
+	return l.globalLogger.Sync()
+}
+
 // Each package can have its own logger
-func NewSugar(name string) *zap.SugaredLogger {
-	return globalLogger.Named(name).Sugar()
+func (l *ToyNoteLogger) NewSugar(name string) *zap.SugaredLogger {
+	return l.globalLogger.Named(name).Sugar()
 }

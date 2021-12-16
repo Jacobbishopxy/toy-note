@@ -22,14 +22,14 @@ Entity                      // Mutable Identifiable Structs
 
 ## Dependencies
 
-- Gin: Web framework
+- [x] Gin: Web framework
 
-- Gorm: ORM
+- [x] Gorm: ORM
 
-- Mongo-driver: MongoDB driver
+- [x] Mongo-driver: MongoDB driver
 
-- Redis: Caching
+- [ ] Redis: Caching
 
-- Zap + Lumberjack: Logging
+- [x] Zap + Lumberjack: Logging
 
-- Swag: API Documentation
+- [x] Swag: API Documentation
