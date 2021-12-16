@@ -8,7 +8,13 @@ import (
 )
 
 const logPath = "test.log"
-const sqlUri = "host=localhost user=root password=secret dbname=dev port=5432 sslmode=disable TimeZone=Asia/Shanghai"
+const sqlUri = `host=localhost
+				user=root
+				password=secret
+				dbname=dev
+				port=5432
+				sslmode=disable
+				TimeZone=Asia/Shanghai`
 
 func TestConnectionAndDataMigration(t *testing.T) {
 	if err := logger.Init("debug", logPath, true); err != nil {

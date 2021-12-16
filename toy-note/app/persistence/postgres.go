@@ -11,11 +11,13 @@ import (
 	"gorm.io/gorm/clause"
 )
 
+// Postgresql Repository
 type PgRepository struct {
 	logger *zap.SugaredLogger
 	db     *gorm.DB
 }
 
+// constructor
 func NewPgRepository(logger *logger.ToyNoteLogger, sqlUri string) (PgRepository, error) {
 	slog := logger.NewSugar("PgRepository")
 
@@ -34,23 +36,43 @@ func NewPgRepository(logger *logger.ToyNoteLogger, sqlUri string) (PgRepository,
 	}, nil
 }
 
+// Auto Migrate. Create tables if not exists
 func (r *PgRepository) AutoMigrate() error {
 	err := r.db.AutoMigrate(&entity.Tag{}, &entity.Affiliate{}, &entity.Post{})
 	r.logger.Debug(fmt.Sprintf("AutoMigrate: %v", err))
 	return err
 }
 
+// This interface only denotes methods of pg repository should be implemented
 type pgRepositoryInterface interface {
+	// Get all tags at once
 	GetTags() ([]entity.Tag, error)
+
+	// Get a tag by id
 	GetTag(uint) (entity.Tag, error)
+
+	// Create a new tag
 	CreateTag(tag entity.Tag) error
+
+	// Update an existing tag
 	UpdateTag(tag entity.Tag) error
+
+	// Delete an existing tag
 	DeleteTag(uint) error
 
+	// Get posts by pagination
 	GetPosts(entity.Pagination) ([]entity.Post, error)
+
+	// Get a post by id, including tags and affiliates
 	GetPost(uint) (entity.Post, error)
+
+	// Create a new post, and associate it with existing tags and affiliates
 	CreatePost(post entity.Post) error
+
+	// Update an existing post, tags and affiliates can be updated as well
 	UpdatePost(post entity.Post) error
+
+	// Delete an existing post, disassociate it with all tags and delete affiliates
 	DeletePost(uint) error
 }
 

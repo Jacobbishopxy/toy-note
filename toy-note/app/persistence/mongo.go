@@ -29,8 +29,8 @@ type MongoRepository struct {
 }
 
 // ToyNoteRepository constructor
-func NewMongoRepository(logger *logger.ToyNoteLogger, ctx context.Context, mongoUri string) (MongoRepository, error) {
-	slog := logger.NewSugar("PgRepository")
+func NewMongoRepository(ctx context.Context, logger *logger.ToyNoteLogger, mongoUri string) (MongoRepository, error) {
+	slog := logger.NewSugar("MongoRepository")
 	slog.Debug(fmt.Sprintf("Connecting to mongo: %v", mongoUri))
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoUri))
@@ -42,13 +42,14 @@ func NewMongoRepository(logger *logger.ToyNoteLogger, ctx context.Context, mongo
 	slog.Debug("Connected to mongo")
 
 	return MongoRepository{
-		db: db,
+		logger: slog,
+		db:     db,
 	}, nil
 }
 
 // Make sure the MongoRepository implements the Repository interface
 type mongoRepositoryInterface interface {
-	UploadFile(reader io.Reader, filename string) error
+	UploadFile(reader io.Reader, filename string) (string, error)
 	DownloadFile(id string) ([]byte, error)
 	DeleteFile(id string) error
 }
@@ -56,29 +57,29 @@ type mongoRepositoryInterface interface {
 var _ mongoRepositoryInterface = &MongoRepository{}
 
 // Upload file to MongoDB
-func (r *MongoRepository) UploadFile(reader io.Reader, filename string) error {
+func (r *MongoRepository) UploadFile(reader io.Reader, filename string) (string, error) {
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to read file")
+		return "", errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to read file")
 	}
 
 	bucket, err := gridfs.NewBucket(r.db)
 	if err != nil {
-		return errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to create bucket")
+		return "", errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to create bucket")
 	}
 
 	uploadStream, err := bucket.OpenUploadStream(filename)
 	if err != nil {
-		return errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to open upload stream")
+		return "", errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to open upload stream")
 	}
 	defer uploadStream.Close()
 
 	_, err = uploadStream.Write(data)
 	if err != nil {
-		return errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to write data to upload stream")
+		return "", errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to write data to upload stream")
 	}
 
-	return nil
+	return uploadStream.FileID.(primitive.ObjectID).Hex(), nil
 }
 
 // Download file from MongoDB, according to the id
