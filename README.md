@@ -15,3 +15,5 @@ Toy Note is a simple note taking app. It can be used to store notes and affiliat
 - [x] Zap + Lumberjack: Logging
 
 - [x] Swag: API Documentation
+
+- [x] Viper: Project configuration

@@ -16,18 +16,19 @@ const sqlUri = `host=localhost
 				sslmode=disable
 				TimeZone=Asia/Shanghai`
 
-func TestConnectionAndDataMigration(t *testing.T) {
+func newPgRepo() (PgRepository, error) {
 	if err := logger.Init("debug", logPath, true); err != nil {
 		panic(err)
-	} else {
-		defer logger.TNLogger.Sync()
 	}
 
-	r, err := NewPgRepository(logger.TNLogger, sqlUri)
+	return NewPgRepository(logger.TNLogger, sqlUri)
+}
 
+func TestConnectionAndDataMigration(t *testing.T) {
+
+	r, err := newPgRepo()
 	require.NoError(t, err)
 
 	err = r.AutoMigrate()
-
 	require.NoError(t, err)
 }
