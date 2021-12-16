@@ -1,4 +1,4 @@
-package services
+package service
 
 // TODO: connecting the business logic
 // 1. web handle

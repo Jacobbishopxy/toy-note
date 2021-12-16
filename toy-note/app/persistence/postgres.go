@@ -2,7 +2,7 @@ package persistence
 
 import (
 	"fmt"
-	"toy-note/app/domain"
+	"toy-note/app/entity"
 	"toy-note/logger"
 
 	"go.uber.org/zap"
@@ -35,22 +35,22 @@ func NewPgRepository(logger *logger.ToyNoteLogger, sqlUri string) (PgRepository,
 }
 
 func (r *PgRepository) AutoMigrate() error {
-	err := r.db.AutoMigrate(&Tag{}, &Affiliate{}, &Post{})
+	err := r.db.AutoMigrate(&entity.Tag{}, &entity.Affiliate{}, &entity.Post{})
 	r.logger.Debug(fmt.Sprintf("AutoMigrate: %v", err))
 	return err
 }
 
 type pgRepositoryInterface interface {
-	GetTags() ([]Tag, error)
-	GetTag(uint) (Tag, error)
-	CreateTag(tag Tag) error
-	UpdateTag(tag Tag) error
+	GetTags() ([]entity.Tag, error)
+	GetTag(uint) (entity.Tag, error)
+	CreateTag(tag entity.Tag) error
+	UpdateTag(tag entity.Tag) error
 	DeleteTag(uint) error
 
-	GetPosts(domain.Pagination) ([]Post, error)
-	GetPost(uint) (Post, error)
-	CreatePost(post Post) error
-	UpdatePost(post Post) error
+	GetPosts(entity.Pagination) ([]entity.Post, error)
+	GetPost(uint) (entity.Post, error)
+	CreatePost(post entity.Post) error
+	UpdatePost(post entity.Post) error
 	DeletePost(uint) error
 }
 
@@ -60,8 +60,8 @@ var _ pgRepositoryInterface = &PgRepository{}
 // Tag
 // ============================================================================
 
-func (r *PgRepository) GetTags() ([]Tag, error) {
-	var tags []Tag
+func (r *PgRepository) GetTags() ([]entity.Tag, error) {
+	var tags []entity.Tag
 	if err := r.db.Find(&tags).Error; err != nil {
 		return nil, err
 	}
@@ -69,8 +69,8 @@ func (r *PgRepository) GetTags() ([]Tag, error) {
 	return tags, nil
 }
 
-func (r *PgRepository) GetTag(id uint) (Tag, error) {
-	var tag Tag
+func (r *PgRepository) GetTag(id uint) (entity.Tag, error) {
+	var tag entity.Tag
 	if err := r.db.First(&tag, id).Error; err != nil {
 		return tag, err
 	}
@@ -78,24 +78,24 @@ func (r *PgRepository) GetTag(id uint) (Tag, error) {
 	return tag, nil
 }
 
-func (r *PgRepository) CreateTag(tag Tag) error {
+func (r *PgRepository) CreateTag(tag entity.Tag) error {
 	return r.db.Create(&tag).Error
 }
 
-func (r *PgRepository) UpdateTag(tag Tag) error {
+func (r *PgRepository) UpdateTag(tag entity.Tag) error {
 	return r.db.Save(&tag).Error
 }
 
 func (r *PgRepository) DeleteTag(id uint) error {
-	return r.db.Delete(Tag{}, id).Error
+	return r.db.Delete(entity.Tag{}, id).Error
 }
 
 // ============================================================================
 // Post
 // ============================================================================
 
-func (r *PgRepository) GetPosts(pagination domain.Pagination) ([]Post, error) {
-	var posts []Post
+func (r *PgRepository) GetPosts(pagination entity.Pagination) ([]entity.Post, error) {
+	var posts []entity.Post
 
 	offset := (pagination.Page - 1) * pagination.Size
 	err := r.db.
@@ -111,8 +111,8 @@ func (r *PgRepository) GetPosts(pagination domain.Pagination) ([]Post, error) {
 	return posts, nil
 }
 
-func (r *PgRepository) GetPost(id uint) (Post, error) {
-	var post Post
+func (r *PgRepository) GetPost(id uint) (entity.Post, error) {
+	var post entity.Post
 	err := r.db.Preload(clause.Associations).First(&post, id).Error
 	if err != nil {
 		return post, err
@@ -121,11 +121,11 @@ func (r *PgRepository) GetPost(id uint) (Post, error) {
 	return post, nil
 }
 
-func (r *PgRepository) CreatePost(post Post) error {
+func (r *PgRepository) CreatePost(post entity.Post) error {
 	return r.db.Save(&post).Error
 }
 
-func (r *PgRepository) UpdatePost(post Post) error {
+func (r *PgRepository) UpdatePost(post entity.Post) error {
 	return r.db.
 		Session(&gorm.Session{FullSaveAssociations: true}).
 		Updates(&post).
@@ -133,5 +133,5 @@ func (r *PgRepository) UpdatePost(post Post) error {
 }
 
 func (r *PgRepository) DeletePost(id uint) error {
-	return r.db.Select("Affiliates").Delete(Post{}, id).Error
+	return r.db.Select("Affiliates").Delete(entity.Post{}, id).Error
 }
