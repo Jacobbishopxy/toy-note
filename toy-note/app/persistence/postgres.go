@@ -43,6 +43,10 @@ func (r *PgRepository) AutoMigrate() error {
 	return err
 }
 
+func (r *PgRepository) TruncateAll() error {
+	return r.db.Exec("TRUNCATE TABLE posts, tags, affiliates RESTART IDENTITY CASCADE;").Error
+}
+
 // This interface only denotes methods of pg repository should be implemented
 type pgRepositoryInterface interface {
 	// Get all tags at once
@@ -52,10 +56,10 @@ type pgRepositoryInterface interface {
 	GetTag(uint) (entity.Tag, error)
 
 	// Create a new tag
-	CreateTag(tag entity.Tag) error
+	CreateTag(tag entity.Tag) (entity.Tag, error)
 
 	// Update an existing tag
-	UpdateTag(tag entity.Tag) error
+	UpdateTag(tag entity.Tag) (entity.Tag, error)
 
 	// Delete an existing tag
 	DeleteTag(uint) error
@@ -100,12 +104,20 @@ func (r *PgRepository) GetTag(id uint) (entity.Tag, error) {
 	return tag, nil
 }
 
-func (r *PgRepository) CreateTag(tag entity.Tag) error {
-	return r.db.Create(&tag).Error
+func (r *PgRepository) CreateTag(tag entity.Tag) (entity.Tag, error) {
+	result := r.db.Create(&tag)
+	if result.Error != nil {
+		return entity.Tag{}, result.Error
+	}
+	return tag, nil
 }
 
-func (r *PgRepository) UpdateTag(tag entity.Tag) error {
-	return r.db.Save(&tag).Error
+func (r *PgRepository) UpdateTag(tag entity.Tag) (entity.Tag, error) {
+	result := r.db.Updates(&tag)
+	if result.Error != nil {
+		return entity.Tag{}, result.Error
+	}
+	return tag, nil
 }
 
 func (r *PgRepository) DeleteTag(id uint) error {
