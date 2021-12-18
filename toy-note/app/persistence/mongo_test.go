@@ -10,7 +10,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const mongoUri = "mongodb://root:secret@localhost:27017"
+var mongoConn = MongoConn{
+	host: "localhost",
+	port: 27017,
+	user: "root",
+	pass: "secret",
+}
 
 func newMongoRepo() (MongoRepository, error) {
 	if err := logger.Init("debug", logPath, true); err != nil {
@@ -20,7 +25,7 @@ func newMongoRepo() (MongoRepository, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	return NewMongoRepository(ctx, logger.TNLogger, mongoUri)
+	return NewMongoRepository(ctx, logger.TNLogger, mongoConn)
 }
 
 func TestMongoConnection(t *testing.T) {

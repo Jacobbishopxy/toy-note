@@ -20,18 +20,18 @@ type Config struct {
 func LoadConfig(path string) (config Config, err error) {
 	viper.AddConfigPath(path)
 	viper.SetConfigName("app")
-	viper.SetConfigType("env") // 可以使用 JSON，XML等其它格式
+	viper.SetConfigType("env")
 
-	// 自动覆盖环境变量值
+	// auto-override environment config
 	viper.AutomaticEnv()
 
-	// 开始读取配置值
+	// read config
 	err = viper.ReadInConfig()
 	if err != nil {
 		return
 	}
 
-	// 转换为 Config 结构体的变量
+	// unmarshal to Config struct
 	err = viper.Unmarshal(&config)
 	return
 }

@@ -15,3 +15,10 @@ type Pagination struct {
 	Page int
 	Size int
 }
+
+func NewPagination(page, size int) Pagination {
+	return Pagination{
+		Page: page,
+		Size: size,
+	}
+}

@@ -17,8 +17,27 @@ type PgRepository struct {
 	db     *gorm.DB
 }
 
+type PgConn struct {
+	host     string
+	port     int
+	user     string
+	password string
+	dbname   string
+	sslmode  string
+}
+
 // constructor
-func NewPgRepository(logger *logger.ToyNoteLogger, sqlUri string) (PgRepository, error) {
+func NewPgRepository(logger *logger.ToyNoteLogger, conn PgConn) (PgRepository, error) {
+	sqlUri := fmt.Sprintf(
+		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s Timezone=Asia/Shanghai",
+		conn.host,
+		conn.port,
+		conn.user,
+		conn.password,
+		conn.dbname,
+		conn.sslmode,
+	)
+
 	slog := logger.NewSugar("PgRepository")
 
 	slog.Debug(fmt.Sprintf("Connecting to sql: %v", sqlUri))
@@ -71,10 +90,10 @@ type pgRepositoryInterface interface {
 	GetPost(uint) (entity.Post, error)
 
 	// Create a new post, and associate it with existing tags and affiliates
-	CreatePost(post entity.Post) error
+	CreatePost(post entity.Post) (entity.Post, error)
 
 	// Update an existing post, tags and affiliates can be updated as well
-	UpdatePost(post entity.Post) error
+	UpdatePost(post entity.Post) (entity.Post, error)
 
 	// Delete an existing post, disassociate it with all tags and delete affiliates
 	DeletePost(uint) error
@@ -105,17 +124,15 @@ func (r *PgRepository) GetTag(id uint) (entity.Tag, error) {
 }
 
 func (r *PgRepository) CreateTag(tag entity.Tag) (entity.Tag, error) {
-	result := r.db.Create(&tag)
-	if result.Error != nil {
-		return entity.Tag{}, result.Error
+	if err := r.db.Create(&tag).Error; err != nil {
+		return entity.Tag{}, err
 	}
 	return tag, nil
 }
 
 func (r *PgRepository) UpdateTag(tag entity.Tag) (entity.Tag, error) {
-	result := r.db.Updates(&tag)
-	if result.Error != nil {
-		return entity.Tag{}, result.Error
+	if err := r.db.Updates(&tag).Error; err != nil {
+		return entity.Tag{}, err
 	}
 	return tag, nil
 }
@@ -130,16 +147,18 @@ func (r *PgRepository) DeleteTag(id uint) error {
 
 func (r *PgRepository) GetPosts(pagination entity.Pagination) ([]entity.Post, error) {
 	var posts []entity.Post
-
+	// calc offset for db query
 	offset := (pagination.Page - 1) * pagination.Size
+	// preload all associations so that each post would be filled with tags and affiliates;
+	// otherwise, the tags and affiliates would be empty
 	err := r.db.
 		Preload(clause.Associations).
 		Limit(pagination.Size).
 		Offset(offset).
-		Association("Tags").
-		Find(&posts)
+		Find(&posts).
+		Error
 	if err != nil {
-		return nil, err
+		return posts, err
 	}
 
 	return posts, nil
@@ -155,15 +174,31 @@ func (r *PgRepository) GetPost(id uint) (entity.Post, error) {
 	return post, nil
 }
 
-func (r *PgRepository) CreatePost(post entity.Post) error {
-	return r.db.Save(&post).Error
+func (r *PgRepository) CreatePost(post entity.Post) (entity.Post, error) {
+
+	// r.db.Model(&post).Association("Tags").Replace(post.Tags)
+	// r.db.Model(&post).Association("Affiliates").Replace(post.Affiliates)
+
+	err := r.db.
+		Save(&post).
+		Error
+
+	if err != nil {
+		return entity.Post{}, err
+	}
+	return post, nil
 }
 
-func (r *PgRepository) UpdatePost(post entity.Post) error {
-	return r.db.
+func (r *PgRepository) UpdatePost(post entity.Post) (entity.Post, error) {
+	err := r.db.
 		Session(&gorm.Session{FullSaveAssociations: true}).
-		Updates(&post).
-		Error
+		Updates(&post).Error
+
+	if err != nil {
+		return entity.Post{}, err
+	}
+
+	return post, nil
 }
 
 func (r *PgRepository) DeletePost(id uint) error {

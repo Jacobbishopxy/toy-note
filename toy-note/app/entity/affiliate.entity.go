@@ -4,8 +4,9 @@ package entity
 //
 // A pointer to a file stored in a remote storage.
 type Affiliate struct {
-	ObjectId  string `gorm:"not null"`
+	UnitId
+	ObjectId  string
 	Filename  string `gorm:"not null"`
-	PostRefer uint   `gorm:"not null"`
+	PostRefer uint
 	Dates
 }
