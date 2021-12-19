@@ -103,6 +103,9 @@ type pgRepositoryInterface interface {
 	// Delete an existing post, disassociate it with all tags and delete affiliates
 	DeletePost(uint) error
 
+	// Find an affiliate by id
+	GetAffiliate(id uint) (entity.Affiliate, error)
+
 	// Find all unowned affiliates
 	GetUnownedAffiliates(entity.Pagination) ([]entity.Affiliate, error)
 
@@ -236,6 +239,15 @@ func (r *PgRepository) DeletePost(id uint) error {
 
 		return nil
 	})
+}
+
+func (r *PgRepository) GetAffiliate(id uint) (entity.Affiliate, error) {
+	var affiliate entity.Affiliate
+	if err := r.db.First(&affiliate, id).Error; err != nil {
+		return affiliate, err
+	}
+
+	return affiliate, nil
 }
 
 func (r *PgRepository) GetUnownedAffiliates(pagination entity.Pagination) ([]entity.Affiliate, error) {

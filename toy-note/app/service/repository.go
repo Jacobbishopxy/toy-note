@@ -11,27 +11,29 @@ type ToyNoteRepo interface {
 	// Get all tags
 	GetTags() ([]entity.Tag, error)
 
-	// Create a new tag
-	CreateTag(tag entity.Tag) (*entity.Tag, error)
-
-	// Update an existing tag
-	UpdateTag(tag entity.Tag) (*entity.Tag, error)
+	// Create/Update a tag
+	// - If the tag Id is null, create a new tag
+	// - If the tag Id is not null, update the existing tag
+	SaveTag(tag entity.Tag) (entity.Tag, error)
 
 	// Delete an existing tag
-	DeleteTag(tag entity.Tag) error
+	DeleteTag(uint) error
 
-	// Get notes by pagination
-	GetByPagination(entity.Pagination) []entity.Post
+	// Get posts by pagination
+	GetPosts(entity.Pagination) ([]entity.Post, error)
 
-	// Create a new note
-	CreateNote(title, context string) (*entity.Post, error)
+	// Create/Update a post
+	// - If the post Id is null, create a new post
+	// - If the post Id is not null, update the existing post
+	SavePost(entity.Post) (entity.Post, error)
 
-	// Update an existing note
-	UpdateNote(entity.Post) (*entity.Post, error)
-
-	// Delete an existing note
-	DeleteNote(entity.Post) error
+	// Delete an existing post
+	DeletePost(uint) error
 
 	// Download an affiliate
-	DownloadAffiliate(string) ([]byte, error)
+	DownloadAffiliate(uint) ([]byte, error)
+
+	// TODO: admin functions:
+	// - Get all affiliates
+	// - Remove affiliates
 }
