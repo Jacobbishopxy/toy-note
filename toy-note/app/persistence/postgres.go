@@ -92,11 +92,22 @@ type pgRepositoryInterface interface {
 	// Create a new post, and associate it with existing tags and affiliates
 	CreatePost(post entity.Post) (entity.Post, error)
 
-	// Update an existing post, tags and affiliates can be updated as well
+	// Update an existing post, tags and affiliates are updated as well
+	// Using `Association` to deal with tags and affiliates, which means that
+	// all the tags and affiliates should always be given in the request.
+	// Any tags or affiliates was previously given and not given by now will be
+	// unbounded from the post. It will not be deleted, so later when we need them,
+	// we can still bind them to the post.
 	UpdatePost(post entity.Post) (entity.Post, error)
 
 	// Delete an existing post, disassociate it with all tags and delete affiliates
 	DeletePost(uint) error
+
+	// Find all unowned affiliates
+	GetUnownedAffiliates(entity.Pagination) ([]entity.Affiliate, error)
+
+	// Delete an unowned affiliate
+	DeleteUnownedAffiliates([]uint) error
 }
 
 var _ pgRepositoryInterface = &PgRepository{}
@@ -157,6 +168,7 @@ func (r *PgRepository) GetPosts(pagination entity.Pagination) ([]entity.Post, er
 		Offset(offset).
 		Find(&posts).
 		Error
+
 	if err != nil {
 		return posts, err
 	}
@@ -175,32 +187,75 @@ func (r *PgRepository) GetPost(id uint) (entity.Post, error) {
 }
 
 func (r *PgRepository) CreatePost(post entity.Post) (entity.Post, error) {
-
-	// r.db.Model(&post).Association("Tags").Replace(post.Tags)
-	// r.db.Model(&post).Association("Affiliates").Replace(post.Affiliates)
-
-	err := r.db.
-		Save(&post).
-		Error
-
-	if err != nil {
+	if err := r.db.Save(&post).Error; err != nil {
 		return entity.Post{}, err
 	}
 	return post, nil
 }
 
 func (r *PgRepository) UpdatePost(post entity.Post) (entity.Post, error) {
-	err := r.db.
-		Session(&gorm.Session{FullSaveAssociations: true}).
-		Updates(&post).Error
 
-	if err != nil {
-		return entity.Post{}, err
-	}
+	r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&post).Association("Tags").Replace(post.Tags); err != nil {
+			return err
+		}
+
+		if err := tx.Model(&post).Association("Affiliates").Replace(post.Affiliates); err != nil {
+			return err
+		}
+
+		if err := tx.Model(&post).Updates(post).Error; err != nil {
+			return err
+		}
+		return nil
+	})
 
 	return post, nil
 }
 
 func (r *PgRepository) DeletePost(id uint) error {
-	return r.db.Select("Affiliates").Delete(entity.Post{}, id).Error
+
+	return r.db.Transaction(func(tx *gorm.DB) error {
+
+		var post entity.Post
+		if err := tx.First(&post, id).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Model(&post).Association("Tags").Clear(); err != nil {
+			return err
+		}
+
+		if err := tx.Model(&post).Association("Affiliates").Clear(); err != nil {
+			return err
+		}
+
+		if err := tx.Delete(&post).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (r *PgRepository) GetUnownedAffiliates(pagination entity.Pagination) ([]entity.Affiliate, error) {
+	var affiliates []entity.Affiliate
+	offset := (pagination.Page - 1) * pagination.Size
+
+	err := r.db.
+		Limit(pagination.Size).
+		Offset(offset).
+		Where("post_refer IS NULL").
+		Find(&affiliates).
+		Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return affiliates, nil
+}
+
+func (r *PgRepository) DeleteUnownedAffiliates(ids []uint) error {
+	return r.db.Where("post_refer IS NULL").Delete(entity.Affiliate{}, ids).Error
 }

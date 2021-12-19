@@ -10,6 +10,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// ============================================================================
+// WARNING! All the test cases should be run sequentially.
+// Otherwise, skip any previous test case can cause the next one to fail.
+// ============================================================================
+
 const logPath = "test.log"
 
 var sqlConn = PgConn{
@@ -29,6 +34,7 @@ func newPgRepo() (PgRepository, error) {
 	return NewPgRepository(logger.TNLogger, sqlConn)
 }
 
+// Auto migrate the database and truncate all tables
 func TestConnectionAndDataMigrationAndTruncateAll(t *testing.T) {
 
 	r, err := newPgRepo()
@@ -41,6 +47,7 @@ func TestConnectionAndDataMigrationAndTruncateAll(t *testing.T) {
 	require.NoError(t, err)
 }
 
+// Reset test case to initial state
 func TestTruncateAll(t *testing.T) {
 	r, err := newPgRepo()
 	require.NoError(t, err)
@@ -112,6 +119,8 @@ func TestDeleteTag(t *testing.T) {
 // Test cases for Posts table
 // - TestCreatePost
 // - TestGetAllPosts
+// - TestUpdatePost
+// - TestDeletePost
 // ============================================================================
 
 func TestCreatePost(t *testing.T) {
@@ -180,4 +189,71 @@ func TestGetAllPosts(t *testing.T) {
 	require.Equal(t, posts[1].Affiliates[0].Id, uint(3))
 	require.Equal(t, posts[1].Tags[0].Id, uint(1))
 	require.Equal(t, posts[1].Tags[1].Id, uint(2))
+}
+
+func TestUpdatePost(t *testing.T) {
+	r, err := newPgRepo()
+	require.NoError(t, err)
+
+	// modify the Id 1 post.
+	// - content changed
+	// - affiliates #3 removed
+	// - tag #1 removed
+	newPost := entity.Post{
+		UnitId:  entity.UnitId{Id: 2},
+		Content: "updated content",
+		Tags: []entity.Tag{
+			{
+				UnitId: entity.UnitId{Id: 2},
+			},
+		},
+	}
+
+	newPost, err = r.UpdatePost(newPost)
+
+	fmt.Println(newPost)
+
+	require.NoError(t, err)
+	// Content should be updated
+	require.Equal(t, newPost.Content, "updated content")
+	// remain affiliates unchanged
+	require.Len(t, newPost.Affiliates, 0)
+	// unbound #1 tag
+	require.Len(t, newPost.Tags, 1)
+	require.Equal(t, newPost.Tags[0].Id, uint(2))
+}
+
+func TestDeletePost(t *testing.T) {
+	r, err := newPgRepo()
+	require.NoError(t, err)
+
+	err = r.DeletePost(2)
+	require.NoError(t, err)
+}
+
+// ============================================================================
+// Test cases for Affiliates table
+// - GetUnownedAffiliates
+// - DeleteUnownedAffiliates
+// ============================================================================
+
+func TestGetUnownedAffiliates(t *testing.T) {
+	r, err := newPgRepo()
+	require.NoError(t, err)
+
+	affiliates, err := r.GetUnownedAffiliates(entity.NewPagination(0, 10))
+	require.NoError(t, err)
+
+	require.Len(t, affiliates, 1)
+	require.Equal(t, affiliates[0].Filename, "test3.txt")
+}
+
+func TestDeleteUnownedAffiliate(t *testing.T) {
+	r, err := newPgRepo()
+	require.NoError(t, err)
+
+	// since #3 is unowned, it should be deleted;
+	// but #1 is owned, so it should not be deleted.
+	err = r.DeleteUnownedAffiliates([]uint{1, 3})
+	require.NoError(t, err)
 }
