@@ -17,9 +17,13 @@ type Config struct {
 	MONGO_DB   string
 }
 
-func LoadConfig(path string) (config Config, err error) {
+func LoadConfig(prod bool, path string) (config Config, err error) {
 	viper.AddConfigPath(path)
-	viper.SetConfigName("app")
+	if prod {
+		viper.SetConfigName("prod")
+	} else {
+		viper.SetConfigName("dev")
+	}
 	viper.SetConfigType("env")
 
 	// auto-override environment config

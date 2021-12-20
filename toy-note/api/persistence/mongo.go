@@ -30,15 +30,15 @@ type MongoRepository struct {
 }
 
 type MongoConn struct {
-	host string
-	port int
-	user string
-	pass string
+	Host string
+	Port int
+	User string
+	Pass string
 }
 
 // constructor
 func NewMongoRepository(ctx context.Context, logger *logger.ToyNoteLogger, conn MongoConn) (MongoRepository, error) {
-	mongoUri := fmt.Sprintf("mongodb://%s:%s@%s:%d", conn.user, conn.pass, conn.host, conn.port)
+	mongoUri := fmt.Sprintf("mongodb://%s:%s@%s:%d", conn.User, conn.Pass, conn.Host, conn.Port)
 
 	slog := logger.NewSugar("MongoRepository")
 	slog.Debug(fmt.Sprintf("Connecting to mongo: %v", mongoUri))

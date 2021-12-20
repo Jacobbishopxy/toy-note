@@ -18,24 +18,24 @@ type PgRepository struct {
 }
 
 type PgConn struct {
-	host     string
-	port     int
-	user     string
-	password string
-	dbname   string
-	sslmode  string
+	Host    string
+	Port    int
+	User    string
+	Pass    string
+	Db      string
+	Sslmode string
 }
 
 // constructor
 func NewPgRepository(logger *logger.ToyNoteLogger, conn PgConn) (PgRepository, error) {
 	sqlUri := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s Timezone=Asia/Shanghai",
-		conn.host,
-		conn.port,
-		conn.user,
-		conn.password,
-		conn.dbname,
-		conn.sslmode,
+		conn.Host,
+		conn.Port,
+		conn.User,
+		conn.Pass,
+		conn.Db,
+		conn.Sslmode,
 	)
 
 	slog := logger.NewSugar("PgRepository")

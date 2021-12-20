@@ -18,12 +18,12 @@ import (
 const logPath = "test.log"
 
 var sqlConn = PgConn{
-	host:     "localhost",
-	port:     5432,
-	user:     "root",
-	password: "secret",
-	dbname:   "dev",
-	sslmode:  "disable",
+	Host:    "localhost",
+	Port:    5432,
+	User:    "root",
+	Pass:    "secret",
+	Db:      "dev",
+	Sslmode: "disable",
 }
 
 func newPgRepo() (PgRepository, error) {

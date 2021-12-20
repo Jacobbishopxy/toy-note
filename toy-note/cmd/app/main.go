@@ -4,6 +4,7 @@ import (
 	"toy-note/api/controller"
 	"toy-note/api/persistence"
 	"toy-note/api/service"
+	"toy-note/api/util"
 	_ "toy-note/docs"
 	"toy-note/logger"
 
@@ -13,6 +14,7 @@ import (
 )
 
 const logPath = "../../../logs/toy-note.log"
+const envPath = "../../../env"
 
 // @title                    Toy-note API
 // @version                  1.0
@@ -33,12 +35,28 @@ func main() {
 		defer logger.TNLogger.Sync()
 	}
 
-	pgConn := persistence.PgConn{
-		// TODO:
+	// Load config
+	config, err := util.LoadConfig(false, envPath)
+	if err != nil {
+		panic(err)
 	}
 
+	// Pg
+	pgConn := persistence.PgConn{
+		Host:    config.PG_HOST,
+		Port:    config.PG_PORT,
+		User:    config.PG_USER,
+		Pass:    config.PG_PASS,
+		Db:      config.PG_DB,
+		Sslmode: "disable",
+	}
+
+	// Mongo
 	mongoConn := persistence.MongoConn{
-		// TODO:
+		Host: config.MONGO_HOST,
+		Port: config.MONGO_PORT,
+		User: config.MONGO_USER,
+		Pass: config.MONGO_PASS,
 	}
 
 	// Initialize service
@@ -53,14 +71,20 @@ func main() {
 		panic(err)
 	}
 
+	// Gin
 	router := gin.New()
+
+	// Api group
 	api := router.Group("/api")
+	{
+		api.GET("/get-tags", toyNoteController.GetTags)
+		api.POST("/save-tag", toyNoteController.SaveTag)
+		api.DELETE("/delete-tag", toyNoteController.DeleteTag)
+	}
 
-	api.GET("/get-tags", toyNoteController.GetTags)
-	api.POST("/save-tag", toyNoteController.SaveTag)
-	api.DELETE("/delete-tag", toyNoteController.DeleteTag)
-
+	// Swagger documention
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
+	// Start server
 	router.Run()
 }

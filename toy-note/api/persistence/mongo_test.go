@@ -11,10 +11,10 @@ import (
 )
 
 var mongoConn = MongoConn{
-	host: "localhost",
-	port: 27017,
-	user: "root",
-	pass: "secret",
+	Host: "localhost",
+	Port: 27017,
+	User: "root",
+	Pass: "secret",
 }
 
 func newMongoRepo() (MongoRepository, error) {
