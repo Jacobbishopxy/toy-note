@@ -12,20 +12,20 @@ import (
 	"go.uber.org/zap"
 )
 
-// NoteController
+// ToyNoteController
 // Work for `Gin.Router`
 //
 // filed service accepts a `ToyNoteRepo` interface
-type NoteController struct {
+type ToyNoteController struct {
 	logger  *zap.SugaredLogger
 	service service.ToyNoteRepo
 }
 
-func NewNoteController(
+func NewToyNoteController(
 	logger *logger.ToyNoteLogger,
 	service service.ToyNoteRepo,
-) *NoteController {
-	return &NoteController{
+) *ToyNoteController {
+	return &ToyNoteController{
 		logger:  logger.NewSugar("NoteController"),
 		service: service,
 	}
@@ -35,7 +35,13 @@ func NewNoteController(
 // Tag
 // ============================================================================
 
-func (c *NoteController) GetTags(ctx *gin.Context) {
+// @Summary      get all tags
+// @Description  get all tags
+// @Tags         tag
+// @Produce      json
+// @Success      200  {array}  entity.Tag
+// @Router       /get-tags [get]
+func (c *ToyNoteController) GetTags(ctx *gin.Context) {
 	tags, err := c.service.GetTags()
 	if err != nil {
 		c.logger.Error(err)
@@ -46,7 +52,15 @@ func (c *NoteController) GetTags(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, tags)
 }
 
-func (c *NoteController) SaveTag(ctx *gin.Context) {
+// @Summary      create/update a tag
+// @Description  create a new tag or update an existing tag, based on whether the tag ID is provided
+// @Tags         tag
+// @Produce      json
+// @Param        data  body      entity.Tag  true  "tag data"
+// @Success      200   {object}  entity.Tag
+// @Failure      400   {object}  string
+// @Router       /save-tag [post]
+func (c *ToyNoteController) SaveTag(ctx *gin.Context) {
 	var tag entity.Tag
 	if err := ctx.ShouldBindJSON(&tag); err != nil {
 		c.logger.Error(err)
@@ -64,7 +78,15 @@ func (c *NoteController) SaveTag(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, tag)
 }
 
-func (c *NoteController) DeleteTag(ctx *gin.Context) {
+// @Summary      delete a tag by ID
+// @Description  delete a tag by ID
+// @Tags         tag
+// @Produce      json
+// @Param        id   path      string  true  "tag ID"
+// @Success      200  {object}  entity.Tag
+// @Failure      404  {object}  string
+// @Router       /delete-tag/{id} [delete]
+func (c *ToyNoteController) DeleteTag(ctx *gin.Context) {
 	idParam := ctx.Param("id")
 	id, err := strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
@@ -84,7 +106,7 @@ func (c *NoteController) DeleteTag(ctx *gin.Context) {
 // Post
 // ============================================================================
 
-func (c *NoteController) GetPosts(ctx *gin.Context) {
+func (c *ToyNoteController) GetPosts(ctx *gin.Context) {
 
 	// get pagination's page from query string
 	pageQuery := ctx.Query("page")
@@ -124,7 +146,7 @@ SavePost
 The core function of this controller.
 Save post can be used to create a new post or update an existing post.
 */
-func (c *NoteController) SavePost(ctx *gin.Context) {
+func (c *ToyNoteController) SavePost(ctx *gin.Context) {
 	// get multipart form
 	form, err := ctx.MultipartForm()
 	if err != nil {
@@ -207,7 +229,7 @@ func (c *NoteController) SavePost(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, post)
 }
 
-func (c *NoteController) DeletePost(ctx *gin.Context) {
+func (c *ToyNoteController) DeletePost(ctx *gin.Context) {
 	idParam := ctx.Param("id")
 	id, err := strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
@@ -224,7 +246,7 @@ func (c *NoteController) DeletePost(ctx *gin.Context) {
 	ctx.Status(http.StatusOK)
 }
 
-func (c *NoteController) DownloadAffiliate(ctx *gin.Context) {
+func (c *ToyNoteController) DownloadAffiliate(ctx *gin.Context) {
 	idParam := ctx.Param("id")
 	id, err := strconv.ParseUint(idParam, 10, 64)
 	if err != nil {

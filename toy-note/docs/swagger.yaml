@@ -1,0 +1,138 @@
+basePath: /api
+definitions:
+  entity.Affiliate:
+    properties:
+      created_at:
+        type: string
+      filename:
+        type: string
+      id:
+        type: integer
+      object_id:
+        type: string
+      post_refer:
+        type: integer
+      updated_at:
+        type: string
+    type: object
+  entity.Post:
+    properties:
+      affiliates:
+        items:
+          $ref: '#/definitions/entity.Affiliate'
+        type: array
+      content:
+        type: string
+      created_at:
+        type: string
+      date:
+        type: string
+      id:
+        type: integer
+      subtitle:
+        type: string
+      tags:
+        items:
+          $ref: '#/definitions/entity.Tag'
+        type: array
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  entity.Tag:
+    properties:
+      color:
+        type: string
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      posts:
+        items:
+          $ref: '#/definitions/entity.Post'
+        type: array
+      updated_at:
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: jacobbishopxy@gmail.com
+    name: Jacob Bishop
+    url: https://github.com/Jacobbishopxy
+  description: A simple toy-note API
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0
+  title: Toy-note API
+  version: "1.0"
+paths:
+  /delete-tag/{id}:
+    delete:
+      description: delete a tag by ID
+      parameters:
+      - description: tag ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Tag'
+        "404":
+          description: Not Found
+          schema:
+            type: string
+      summary: delete a tag by ID
+      tags:
+      - tag
+  /get-tags:
+    get:
+      description: get all tags
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Tag'
+            type: array
+      summary: get all tags
+      tags:
+      - tag
+  /save-tag:
+    post:
+      description: create a new tag or update an existing tag, based on whether the
+        tag ID is provided
+      parameters:
+      - description: tag data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/entity.Tag'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Tag'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      summary: create/update a tag
+      tags:
+      - tag
+swagger: "2.0"
