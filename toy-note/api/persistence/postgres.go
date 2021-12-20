@@ -2,7 +2,7 @@ package persistence
 
 import (
 	"fmt"
-	"toy-note/app/entity"
+	"toy-note/api/entity"
 	"toy-note/logger"
 
 	"go.uber.org/zap"

@@ -1,7 +1,7 @@
 package service
 
 import (
-	"toy-note/app/entity"
+	"toy-note/api/entity"
 )
 
 // ToyNoteRepo

@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 	"time"
-	"toy-note/app/entity"
-	"toy-note/app/persistence"
+	"toy-note/api/entity"
+	"toy-note/api/persistence"
 	"toy-note/logger"
 
 	"go.uber.org/zap"

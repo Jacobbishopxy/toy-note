@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 	"time"
-	"toy-note/app/entity"
+	"toy-note/api/entity"
 	"toy-note/logger"
 
 	"github.com/stretchr/testify/require"
