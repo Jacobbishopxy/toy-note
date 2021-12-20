@@ -37,15 +37,17 @@ func TestMongoConnection(t *testing.T) {
 
 func TestUploadAndDownloadFile(t *testing.T) {
 
+	filenameUsedForSaving := "test.log.bak"
+
 	r, err := newMongoRepo()
 	require.NoError(t, err)
 
 	reader, err := os.Open("test.log")
 	require.NoError(t, err)
 
-	id, err := r.UploadFile(reader, "test.log.bak")
+	id, err := r.UploadFile(reader, filenameUsedForSaving)
 	require.NoError(t, err)
 
-	_, err = r.DownloadFile(id)
+	_, err = r.DownloadFile(filenameUsedForSaving, id)
 	require.NoError(t, err)
 }

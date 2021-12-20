@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"time"
 
+	"toy-note/api/entity"
 	"toy-note/errors"
 	"toy-note/logger"
 
@@ -59,13 +60,14 @@ func NewMongoRepository(ctx context.Context, logger *logger.ToyNoteLogger, conn 
 // Make sure the MongoRepository implements the Repository interface
 type mongoRepositoryInterface interface {
 	UploadFile(reader io.Reader, filename string) (string, error)
-	DownloadFile(id string) ([]byte, error)
-	DeleteFile(id string) error
+	DownloadFile(filename, id string) (entity.FileObject, error)
+	DeleteFiles(ids []string) error
 }
 
 var _ mongoRepositoryInterface = &MongoRepository{}
 
 // Upload file to MongoDB
+// The result string is the object id from the MongoDB, which is supposed to be stored in PG.
 func (r *MongoRepository) UploadFile(reader io.Reader, filename string) (string, error) {
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
@@ -92,40 +94,49 @@ func (r *MongoRepository) UploadFile(reader io.Reader, filename string) (string,
 }
 
 // Download file from MongoDB, according to the id
-func (r *MongoRepository) DownloadFile(id string) ([]byte, error) {
+func (r *MongoRepository) DownloadFile(filename, id string) (entity.FileObject, error) {
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return nil, errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to convert id to ObjectID")
+		return entity.FileObject{}, errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to convert id to ObjectID")
 	}
 
 	bucket, err := gridfs.NewBucket(r.db)
 	if err != nil {
-		return nil, errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to create bucket")
+		return entity.FileObject{}, errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to create bucket")
 	}
 
 	var buf bytes.Buffer
 	size, err := bucket.DownloadToStream(oid, &buf)
 	if err != nil {
-		return nil, errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to download stream")
+		return entity.FileObject{}, errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to download stream")
 	}
 
 	r.logger.Debug(fmt.Sprintf("File download completed, size: %v", size))
 
-	return buf.Bytes(), nil
+	return entity.FileObject{
+		Filename: filename,
+		Content:  buf.Bytes(),
+		Size:     size,
+	}, nil
 }
 
-// Delete file from MongoDB, according to the id
-func (r *MongoRepository) DeleteFile(id string) error {
-	oid, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to convert id to ObjectID")
+// Delete files from MongoDB, according to the ids
+func (r *MongoRepository) DeleteFiles(ids []string) error {
+	var oids []primitive.ObjectID
+	for _, id := range ids {
+		oid, err := primitive.ObjectIDFromHex(id)
+		if err != nil {
+			return errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to convert id to ObjectID")
+		}
+
+		oids = append(oids, oid)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	if _, err = r.db.Collection(CollectionName).DeleteOne(ctx, bson.M{"_id": oid}); err != nil {
-		return errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to delete file")
+	if _, err := r.db.Collection(CollectionName).DeleteMany(ctx, bson.M{"_id": bson.M{"$in": oids}}); err != nil {
+		return errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to delete files")
 	}
 
 	return nil

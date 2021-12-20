@@ -15,10 +15,10 @@ import (
 // - updated_at
 type Post struct {
 	UnitId
-	Title      string      `gorm:"size:100;not null"`
-	Subtitle   string      `gorm:"size:100"`
-	Content    string      `gorm:"text;not null"`
-	Date       time.Time   `gorm:"index;not null"`
+	Title      string      `gorm:"size:100;not null" json:"title"`
+	Subtitle   string      `gorm:"size:100" json:"subtitle,omitempty"`
+	Content    string      `gorm:"text;not null" json:"content"`
+	Date       time.Time   `gorm:"index;not null" json:"date"`
 	Affiliates []Affiliate `gorm:"foreignKey:PostRefer;references:Id"`
 	Tags       []Tag       `gorm:"many2many:posts_tags;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 	Dates

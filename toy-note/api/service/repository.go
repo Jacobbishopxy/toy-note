@@ -1,6 +1,7 @@
 package service
 
 import (
+	"io"
 	"toy-note/api/entity"
 )
 
@@ -30,10 +31,18 @@ type ToyNoteRepo interface {
 	// Delete an existing post
 	DeletePost(uint) error
 
-	// Download an affiliate
-	DownloadAffiliate(uint) ([]byte, error)
+	// Upload an affiliate
+	UploadAffiliate(io.Reader, string) (string, error)
 
-	// TODO: admin functions:
-	// - Get all affiliates
-	// - Remove affiliates
+	// Download an affiliate
+	DownloadAffiliate(uint) (entity.FileObject, error)
+
+	// [admin] Get all unowned affiliates by pagination
+	GetUnownedAffiliates(entity.Pagination) ([]entity.Affiliate, error)
+
+	// [admin] Rebind a unowned affiliate to a post
+	RebindAffiliate(uint, uint) error
+
+	// [admin] Remove affiliates, which will remove affiliates files from mongo as well
+	DeleteUnownedAffiliates([]uint) error
 }

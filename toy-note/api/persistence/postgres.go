@@ -75,10 +75,10 @@ type pgRepositoryInterface interface {
 	GetTag(uint) (entity.Tag, error)
 
 	// Create a new tag
-	CreateTag(tag entity.Tag) (entity.Tag, error)
+	CreateTag(entity.Tag) (entity.Tag, error)
 
 	// Update an existing tag
-	UpdateTag(tag entity.Tag) (entity.Tag, error)
+	UpdateTag(entity.Tag) (entity.Tag, error)
 
 	// Delete an existing tag
 	DeleteTag(uint) error
@@ -90,7 +90,7 @@ type pgRepositoryInterface interface {
 	GetPost(uint) (entity.Post, error)
 
 	// Create a new post, and associate it with existing tags and affiliates
-	CreatePost(post entity.Post) (entity.Post, error)
+	CreatePost(entity.Post) (entity.Post, error)
 
 	// Update an existing post, tags and affiliates are updated as well
 	// Using `Association` to deal with tags and affiliates, which means that
@@ -98,15 +98,18 @@ type pgRepositoryInterface interface {
 	// Any tags or affiliates was previously given and not given by now will be
 	// unbounded from the post. It will not be deleted, so later when we need them,
 	// we can still bind them to the post.
-	UpdatePost(post entity.Post) (entity.Post, error)
+	UpdatePost(entity.Post) (entity.Post, error)
 
 	// Delete an existing post, disassociate it with all tags and delete affiliates
 	DeletePost(uint) error
 
 	// Find an affiliate by id
-	GetAffiliate(id uint) (entity.Affiliate, error)
+	GetAffiliate(uint) (entity.Affiliate, error)
 
-	// Find all unowned affiliates
+	// Find all unowned affiliates by ids
+	GetUnownedAffiliatesByIds([]uint) ([]entity.Affiliate, error)
+
+	// Find all unowned affiliates by pagination
 	GetUnownedAffiliates(entity.Pagination) ([]entity.Affiliate, error)
 
 	// Delete an unowned affiliate
@@ -248,6 +251,21 @@ func (r *PgRepository) GetAffiliate(id uint) (entity.Affiliate, error) {
 	}
 
 	return affiliate, nil
+}
+
+func (r *PgRepository) GetUnownedAffiliatesByIds(ids []uint) ([]entity.Affiliate, error) {
+	var affiliates []entity.Affiliate
+
+	err := r.db.
+		Where("post_refer IS NULL").
+		Find(&affiliates, ids).
+		Error
+
+	if err != nil {
+		return affiliates, err
+	}
+
+	return affiliates, nil
 }
 
 func (r *PgRepository) GetUnownedAffiliates(pagination entity.Pagination) ([]entity.Affiliate, error) {

@@ -3,12 +3,12 @@ package entity
 import "time"
 
 type UnitId struct {
-	Id uint `gorm:"primaryKey;autoIncrement"`
+	Id uint `gorm:"primaryKey;autoIncrement" json:"id,omitempty"`
 }
 
 type Dates struct {
-	CreatedAt time.Time `gorm:"autoCreateTime"`
-	UpdatedAt time.Time `gorm:"autoUpdateTime"`
+	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at,omitempty"`
+	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at,omitempty"`
 }
 
 type Pagination struct {
@@ -21,4 +21,10 @@ func NewPagination(page, size int) Pagination {
 		Page: page,
 		Size: size,
 	}
+}
+
+type FileObject struct {
+	Filename string
+	Content  []byte
+	Size     int64
 }
