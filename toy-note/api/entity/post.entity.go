@@ -4,15 +4,17 @@ import (
 	"time"
 )
 
-// Post
-//
-// A data structure used for storing notes.
-// - id
-// - title
-// - subtitle
-// - content
-// - created_at
-// - updated_at
+/*
+Post
+
+A data structure used for storing notes.
+- id
+- title
+- subtitle
+- content
+- created_at
+- updated_at
+*/
 type Post struct {
 	UnitId
 	Title      string      `gorm:"size:100;not null" json:"title"`

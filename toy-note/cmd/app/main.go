@@ -14,7 +14,7 @@ import (
 )
 
 const logPath = "../../../logs/toy-note.log"
-const envPath = "../../../env"
+const envPath = "../../env"
 
 // @title                    Toy-note API
 // @version                  1.0

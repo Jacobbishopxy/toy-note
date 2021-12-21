@@ -1,8 +1,10 @@
 package entity
 
-// Affiliate
-//
-// A pointer to a file stored in a remote storage.
+/*
+Affiliate
+
+A pointer to a file stored in a remote storage.
+*/
 type Affiliate struct {
 	UnitId
 	ObjectId  string `gorm:"not null" json:"object_id,omitempty"`

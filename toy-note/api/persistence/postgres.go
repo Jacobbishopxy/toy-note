@@ -63,7 +63,9 @@ func (r *PgRepository) AutoMigrate() error {
 }
 
 func (r *PgRepository) TruncateAll() error {
-	return r.db.Exec("TRUNCATE TABLE posts, tags, affiliates RESTART IDENTITY CASCADE;").Error
+	err := r.db.Exec("TRUNCATE TABLE posts, tags, affiliates RESTART IDENTITY CASCADE;").Error
+	r.logger.Debug(fmt.Sprintf("TruncateAll: %v", err))
+	return err
 }
 
 // This interface only denotes methods of pg repository should be implemented
@@ -202,14 +204,17 @@ func (r *PgRepository) CreatePost(post entity.Post) (entity.Post, error) {
 func (r *PgRepository) UpdatePost(post entity.Post) (entity.Post, error) {
 
 	r.db.Transaction(func(tx *gorm.DB) error {
+		// update tags by replacing it
 		if err := tx.Model(&post).Association("Tags").Replace(post.Tags); err != nil {
 			return err
 		}
 
+		// update affiliates by replacing it
 		if err := tx.Model(&post).Association("Affiliates").Replace(post.Affiliates); err != nil {
 			return err
 		}
 
+		// update post
 		if err := tx.Model(&post).Updates(post).Error; err != nil {
 			return err
 		}

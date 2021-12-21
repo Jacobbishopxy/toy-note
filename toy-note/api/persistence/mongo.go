@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"toy-note/api/entity"
-	"toy-note/errors"
 	"toy-note/logger"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -45,7 +44,7 @@ func NewMongoRepository(ctx context.Context, logger *logger.ToyNoteLogger, conn 
 
 	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoUri))
 	if err != nil {
-		return MongoRepository{}, errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to connect to MongoDB")
+		return MongoRepository{}, err
 	}
 	db := client.Database(DatabaseName)
 
@@ -71,23 +70,23 @@ var _ mongoRepositoryInterface = &MongoRepository{}
 func (r *MongoRepository) UploadFile(reader io.Reader, filename string) (string, error) {
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
-		return "", errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to read file")
+		return "", err
 	}
 
 	bucket, err := gridfs.NewBucket(r.db)
 	if err != nil {
-		return "", errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to create bucket")
+		return "", err
 	}
 
 	uploadStream, err := bucket.OpenUploadStream(filename)
 	if err != nil {
-		return "", errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to open upload stream")
+		return "", err
 	}
 	defer uploadStream.Close()
 
 	_, err = uploadStream.Write(data)
 	if err != nil {
-		return "", errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to write data to upload stream")
+		return "", err
 	}
 
 	return uploadStream.FileID.(primitive.ObjectID).Hex(), nil
@@ -97,18 +96,18 @@ func (r *MongoRepository) UploadFile(reader io.Reader, filename string) (string,
 func (r *MongoRepository) DownloadFile(filename, id string) (entity.FileObject, error) {
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		return entity.FileObject{}, errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to convert id to ObjectID")
+		return entity.FileObject{}, err
 	}
 
 	bucket, err := gridfs.NewBucket(r.db)
 	if err != nil {
-		return entity.FileObject{}, errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to create bucket")
+		return entity.FileObject{}, err
 	}
 
 	var buf bytes.Buffer
 	size, err := bucket.DownloadToStream(oid, &buf)
 	if err != nil {
-		return entity.FileObject{}, errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to download stream")
+		return entity.FileObject{}, err
 	}
 
 	r.logger.Debug(fmt.Sprintf("File download completed, size: %v", size))
@@ -126,7 +125,7 @@ func (r *MongoRepository) DeleteFiles(ids []string) error {
 	for _, id := range ids {
 		oid, err := primitive.ObjectIDFromHex(id)
 		if err != nil {
-			return errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to convert id to ObjectID")
+			return err
 		}
 
 		oids = append(oids, oid)
@@ -136,7 +135,7 @@ func (r *MongoRepository) DeleteFiles(ids []string) error {
 	defer cancel()
 
 	if _, err := r.db.Collection(CollectionName).DeleteMany(ctx, bson.M{"_id": bson.M{"$in": oids}}); err != nil {
-		return errors.WrapErrorf(err, errors.ErrorCodeUnknown, "Failed to delete files")
+		return err
 	}
 
 	return nil
