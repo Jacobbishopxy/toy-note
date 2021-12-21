@@ -63,7 +63,7 @@ type mongoRepositoryInterface interface {
 	DeleteFiles(ids []string) error
 }
 
-var _ mongoRepositoryInterface = &MongoRepository{}
+var _ mongoRepositoryInterface = (*MongoRepository)(nil)
 
 // Upload file to MongoDB
 // The result string is the object id from the MongoDB, which is supposed to be stored in PG.

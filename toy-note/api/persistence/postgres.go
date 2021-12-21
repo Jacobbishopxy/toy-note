@@ -105,6 +105,11 @@ type pgRepositoryInterface interface {
 	// Delete an existing post, disassociate it with all tags and delete affiliates
 	DeletePost(uint) error
 
+	// Create/Update a new affiliate, notice that the affiliate don't need to be
+	// associated to any post.
+	// This method should not be exposed to the user
+	SaveAffiliate(entity.Affiliate) (entity.Affiliate, error)
+
 	// Find an affiliate by id
 	GetAffiliate(uint) (entity.Affiliate, error)
 
@@ -118,7 +123,7 @@ type pgRepositoryInterface interface {
 	DeleteUnownedAffiliates([]uint) error
 }
 
-var _ pgRepositoryInterface = &PgRepository{}
+var _ pgRepositoryInterface = (*PgRepository)(nil)
 
 // ============================================================================
 // Tag
@@ -247,6 +252,13 @@ func (r *PgRepository) DeletePost(id uint) error {
 
 		return nil
 	})
+}
+
+func (r *PgRepository) SaveAffiliate(affiliate entity.Affiliate) (entity.Affiliate, error) {
+	if err := r.db.Save(&affiliate).Error; err != nil {
+		return entity.Affiliate{}, err
+	}
+	return affiliate, nil
 }
 
 func (r *PgRepository) GetAffiliate(id uint) (entity.Affiliate, error) {

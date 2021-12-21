@@ -52,7 +52,7 @@ func (s *ToyNoteService) Init() error {
 	return nil
 }
 
-var _ ToyNoteRepo = &ToyNoteService{}
+var _ ToyNoteRepo = (*ToyNoteService)(nil)
 
 func (s *ToyNoteService) GetTags() ([]entity.Tag, error) {
 	return s.pg.GetTags()
