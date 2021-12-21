@@ -58,7 +58,7 @@ func (c *ToyNoteController) GetTags(ctx *gin.Context) {
 // @Produce      json
 // @Param        data  body      entity.Tag  true  "tag data"
 // @Success      200   {object}  entity.Tag
-// @Failure      400   {object}  string
+// @Failure      400    {object}  string
 // @Router       /save-tag [post]
 func (c *ToyNoteController) SaveTag(ctx *gin.Context) {
 	var tag entity.Tag
@@ -82,8 +82,8 @@ func (c *ToyNoteController) SaveTag(ctx *gin.Context) {
 // @Description  delete a tag by ID
 // @Tags         tag
 // @Produce      json
-// @Param        id   path      string  true  "tag ID"
-// @Success      200  {object}  entity.Tag
+// @Param        id   path      int  true  "tag ID"
+// @Success      200  {object}  nil
 // @Failure      404  {object}  string
 // @Router       /delete-tag/{id} [delete]
 func (c *ToyNoteController) DeleteTag(ctx *gin.Context) {
@@ -106,6 +106,14 @@ func (c *ToyNoteController) DeleteTag(ctx *gin.Context) {
 // Post
 // ============================================================================
 
+// @Summary      get all posts
+// @Description  get all posts
+// @Tags         post
+// @Param        page  query  int  true  "page number"
+// @Param        size  query  int  true  "page size"
+// @Produce      json
+// @Success      200  {array}  entity.Post
+// @Router       /get-posts [get]
 func (c *ToyNoteController) GetPosts(ctx *gin.Context) {
 
 	// get pagination's page from query string
@@ -140,12 +148,18 @@ func (c *ToyNoteController) GetPosts(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, posts)
 }
 
-/*
-SavePost
-
-The core function of this controller.
-Save post can be used to create a new post or update an existing post.
-*/
+// @Summary      create/update a post
+// @Description  Save post can be used to create a new post or update an existing post.
+// @Description  If id is not provided, it will create a new post; Otherwise, it will update an existing post.
+// @Description  Form-data should also be provided if the post has any new affiliate.
+// @Tags         post
+// @Accept       multipart/form-data
+// @Produce      json
+// @Param        data   body      entity.Post  true   "post data"
+// @Param        files  formData  file         false  "affiliate files"
+// @Success      200    {object}  entity.Post
+// @Failure      400   {object}  string
+// @Router       /save-post [post]
 func (c *ToyNoteController) SavePost(ctx *gin.Context) {
 	// get multipart form
 	form, err := ctx.MultipartForm()
@@ -229,6 +243,14 @@ func (c *ToyNoteController) SavePost(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, post)
 }
 
+// @Summary      delete a post by ID
+// @Description  delete a post by ID
+// @Tags         post
+// @Produce      json
+// @Param        id   path      string  true  "post ID"
+// @Success      200  {object}  nil
+// @Failure      404  {object}  string
+// @Router       /delete-post/{id} [delete]
 func (c *ToyNoteController) DeletePost(ctx *gin.Context) {
 	idParam := ctx.Param("id")
 	id, err := strconv.ParseUint(idParam, 10, 64)
@@ -246,6 +268,12 @@ func (c *ToyNoteController) DeletePost(ctx *gin.Context) {
 	ctx.Status(http.StatusOK)
 }
 
+// @Summary      download an affiliate by ID
+// @Description  download an affiliate by ID
+// @Tags         affiliate
+// @Param        id  path  int  true  "affiliate ID"
+// @Produce      json
+// @Router       /download-file [get]
 func (c *ToyNoteController) DownloadAffiliate(ctx *gin.Context) {
 	idParam := ctx.Param("id")
 	id, err := strconv.ParseUint(idParam, 10, 64)

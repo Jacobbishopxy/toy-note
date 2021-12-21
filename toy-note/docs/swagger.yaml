@@ -72,11 +72,11 @@ info:
   title: Toy-note API
   version: "1.0"
 paths:
-  /delete-tag/{id}:
+  /delete-post/{id}:
     delete:
-      description: delete a tag by ID
+      description: delete a post by ID
       parameters:
-      - description: tag ID
+      - description: post ID
         in: path
         name: id
         required: true
@@ -86,8 +86,27 @@ paths:
       responses:
         "200":
           description: OK
+        "404":
+          description: Not Found
           schema:
-            $ref: '#/definitions/entity.Tag'
+            type: string
+      summary: delete a post by ID
+      tags:
+      - post
+  /delete-tag/{id}:
+    delete:
+      description: delete a tag by ID
+      parameters:
+      - description: tag ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
         "404":
           description: Not Found
           schema:
@@ -95,6 +114,46 @@ paths:
       summary: delete a tag by ID
       tags:
       - tag
+  /download-file:
+    get:
+      description: download an affiliate by ID
+      parameters:
+      - description: affiliate ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      summary: download an affiliate by ID
+      tags:
+      - affiliate
+  /get-posts:
+    get:
+      description: get all posts
+      parameters:
+      - description: page number
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: page size
+        in: query
+        name: size
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Post'
+            type: array
+      summary: get all posts
+      tags:
+      - post
   /get-tags:
     get:
       description: get all tags
@@ -110,6 +169,39 @@ paths:
       summary: get all tags
       tags:
       - tag
+  /save-post:
+    post:
+      consumes:
+      - multipart/form-data
+      description: |-
+        Save post can be used to create a new post or update an existing post.
+        If id is not provided, it will create a new post; Otherwise, it will update an existing post.
+        Form-data should also be provided if the post has any new affiliate.
+      parameters:
+      - description: post data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/entity.Post'
+      - description: affiliate files
+        in: formData
+        name: files
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/entity.Post'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      summary: create/update a post
+      tags:
+      - post
   /save-tag:
     post:
       description: create a new tag or update an existing tag, based on whether the

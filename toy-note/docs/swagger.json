@@ -17,6 +17,38 @@
     "host": "localhost:8080",
     "basePath": "/api",
     "paths": {
+        "/delete-post/{id}": {
+            "delete": {
+                "description": "delete a post by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "post"
+                ],
+                "summary": "delete a post by ID",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "post ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/delete-tag/{id}": {
             "delete": {
                 "description": "delete a tag by ID",
@@ -29,7 +61,7 @@
                 "summary": "delete a tag by ID",
                 "parameters": [
                     {
-                        "type": "string",
+                        "type": "integer",
                         "description": "tag ID",
                         "name": "id",
                         "in": "path",
@@ -38,15 +70,72 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/entity.Tag"
-                        }
+                        "description": "OK"
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
                             "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/download-file": {
+            "get": {
+                "description": "download an affiliate by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "affiliate"
+                ],
+                "summary": "download an affiliate by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "affiliate ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ]
+            }
+        },
+        "/get-posts": {
+            "get": {
+                "description": "get all posts",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "post"
+                ],
+                "summary": "get all posts",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "page number",
+                        "name": "page",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "page size",
+                        "name": "size",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.Post"
+                            }
                         }
                     }
                 }
@@ -70,6 +159,52 @@
                             "items": {
                                 "$ref": "#/definitions/entity.Tag"
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "/save-post": {
+            "post": {
+                "description": "Save post can be used to create a new post or update an existing post.\nIf id is not provided, it will create a new post; Otherwise, it will update an existing post.\nForm-data should also be provided if the post has any new affiliate.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "post"
+                ],
+                "summary": "create/update a post",
+                "parameters": [
+                    {
+                        "description": "post data",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/entity.Post"
+                        }
+                    },
+                    {
+                        "type": "file",
+                        "description": "affiliate files",
+                        "name": "files",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/entity.Post"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "string"
                         }
                     }
                 }
