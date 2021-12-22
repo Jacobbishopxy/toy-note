@@ -8,6 +8,7 @@ import (
 Post
 
 A data structure used for storing notes.
+
 - id
 - title
 - subtitle
@@ -21,7 +22,7 @@ type Post struct {
 	Subtitle   string      `gorm:"size:100" json:"subtitle,omitempty"`
 	Content    string      `gorm:"text;not null" json:"content"`
 	Date       time.Time   `gorm:"index;not null" json:"date"`
-	Affiliates []Affiliate `gorm:"foreignKey:PostRefer;references:Id"`
-	Tags       []Tag       `gorm:"many2many:posts_tags;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	Affiliates []Affiliate `gorm:"foreignKey:PostRefer;references:Id" json:"affiliates"`
+	Tags       []Tag       `gorm:"many2many:posts_tags;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"tags"`
 	Dates
 }

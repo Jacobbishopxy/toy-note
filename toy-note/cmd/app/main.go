@@ -79,13 +79,13 @@ func main() {
 	{
 		api.GET("/get-tags", toyNoteController.GetTags)
 		api.POST("/save-tag", toyNoteController.SaveTag)
-		api.DELETE("/delete-tag", toyNoteController.DeleteTag)
+		api.DELETE("/delete-tag/:id", toyNoteController.DeleteTag)
 
 		api.GET("/get-posts", toyNoteController.GetPosts)
 		api.POST("/save-post", toyNoteController.SavePost)
-		api.DELETE("/delete-post", toyNoteController.DeletePost)
+		api.DELETE("/delete-post/:id", toyNoteController.DeletePost)
 
-		api.GET("/download-file", toyNoteController.DownloadAffiliate)
+		api.GET("/download-file/:id", toyNoteController.DownloadAffiliate)
 	}
 
 	// Swagger documention

@@ -8,6 +8,5 @@ install-swag:
 swag-fmt:
 	swag fmt -d ./api -g ../cmd/app/main.go
 
-swag-init:
+swag-init: swag-fmt
 	swag init -d ./api -g ../cmd/app/main.go
-

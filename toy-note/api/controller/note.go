@@ -45,7 +45,7 @@ func (c *ToyNoteController) GetTags(ctx *gin.Context) {
 	tags, err := c.service.GetTags()
 	if err != nil {
 		c.logger.Error(err)
-		ctx.AbortWithError(http.StatusInternalServerError, err)
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
@@ -58,20 +58,20 @@ func (c *ToyNoteController) GetTags(ctx *gin.Context) {
 // @Produce      json
 // @Param        data  body      entity.Tag  true  "tag data"
 // @Success      200   {object}  entity.Tag
-// @Failure      400    {object}  string
+// @Failure      400    {object}  errorMessage
 // @Router       /save-tag [post]
 func (c *ToyNoteController) SaveTag(ctx *gin.Context) {
 	var tag entity.Tag
 	if err := ctx.ShouldBindJSON(&tag); err != nil {
 		c.logger.Error(err)
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
 	tag, err := c.service.SaveTag(tag)
 	if err != nil {
 		c.logger.Error(err)
-		ctx.AbortWithError(http.StatusInternalServerError, err)
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
@@ -83,23 +83,23 @@ func (c *ToyNoteController) SaveTag(ctx *gin.Context) {
 // @Tags         tag
 // @Produce      json
 // @Param        id   path      int  true  "tag ID"
-// @Success      200  {object}  nil
-// @Failure      404  {object}  string
+// @Success      200  {object}  successMessage
+// @Failure      500  {object}  errorMessage
 // @Router       /delete-tag/{id} [delete]
 func (c *ToyNoteController) DeleteTag(ctx *gin.Context) {
 	idParam := ctx.Param("id")
 	id, err := strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 	if err := c.service.DeleteTag(uint(id)); err != nil {
 		c.logger.Error(err)
-		ctx.AbortWithError(http.StatusInternalServerError, err)
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	ctx.Status(http.StatusOK)
+	ctx.JSON(http.StatusOK, successResponse(id))
 }
 
 // ============================================================================
@@ -120,7 +120,7 @@ func (c *ToyNoteController) GetPosts(ctx *gin.Context) {
 	pageQuery := ctx.Query("page")
 	page, err := strconv.ParseInt(pageQuery, 10, 64)
 	if err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
@@ -128,7 +128,7 @@ func (c *ToyNoteController) GetPosts(ctx *gin.Context) {
 	sizeQuery := ctx.Query("size")
 	size, err := strconv.ParseInt(sizeQuery, 10, 64)
 	if err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
@@ -141,7 +141,7 @@ func (c *ToyNoteController) GetPosts(ctx *gin.Context) {
 	posts, err := c.service.GetPosts(pagination)
 	if err != nil {
 		c.logger.Error(err)
-		ctx.AbortWithError(http.StatusInternalServerError, err)
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
@@ -158,14 +158,14 @@ func (c *ToyNoteController) GetPosts(ctx *gin.Context) {
 // @Param        data   body      entity.Post  true   "post data"
 // @Param        files  formData  file         false  "affiliate files"
 // @Success      200    {object}  entity.Post
-// @Failure      400   {object}  string
+// @Failure      400   {object}  errorMessage
 // @Router       /save-post [post]
 func (c *ToyNoteController) SavePost(ctx *gin.Context) {
 	// get multipart form
 	form, err := ctx.MultipartForm()
 	if err != nil {
 		c.logger.Error(err)
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
@@ -175,7 +175,7 @@ func (c *ToyNoteController) SavePost(ctx *gin.Context) {
 	var post entity.Post
 	if err := ctx.ShouldBindJSON(&post); err != nil {
 		c.logger.Error(err)
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
@@ -193,7 +193,7 @@ func (c *ToyNoteController) SavePost(ctx *gin.Context) {
 			newAffiliatesLen,
 			filesLen,
 		))
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
@@ -207,7 +207,7 @@ func (c *ToyNoteController) SavePost(ctx *gin.Context) {
 		file, err := file.Open()
 		if err != nil {
 			c.logger.Error(err)
-			ctx.AbortWithError(http.StatusBadRequest, err)
+			ctx.JSON(http.StatusBadRequest, errorResponse(err))
 			return
 		}
 		defer file.Close()
@@ -216,7 +216,7 @@ func (c *ToyNoteController) SavePost(ctx *gin.Context) {
 		oid, err := c.service.UploadAffiliate(file, filename)
 		if err != nil {
 			c.logger.Error(err)
-			ctx.AbortWithError(http.StatusInternalServerError, err)
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 			return
 		}
 
@@ -236,7 +236,7 @@ func (c *ToyNoteController) SavePost(ctx *gin.Context) {
 	post, err = c.service.SavePost(post)
 	if err != nil {
 		c.logger.Error(err)
-		ctx.AbortWithError(http.StatusInternalServerError, err)
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
@@ -248,52 +248,53 @@ func (c *ToyNoteController) SavePost(ctx *gin.Context) {
 // @Tags         post
 // @Produce      json
 // @Param        id   path      string  true  "post ID"
-// @Success      200  {object}  nil
-// @Failure      404  {object}  string
+// @Success      200  {object}  successMessage
+// @Failure      500  {object}  errorMessage
 // @Router       /delete-post/{id} [delete]
 func (c *ToyNoteController) DeletePost(ctx *gin.Context) {
 	idParam := ctx.Param("id")
 	id, err := strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
 	if err := c.service.DeletePost(uint(id)); err != nil {
 		c.logger.Error(err)
-		ctx.AbortWithError(http.StatusInternalServerError, err)
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
-	ctx.Status(http.StatusOK)
+	ctx.JSON(http.StatusOK, successResponse(id))
 }
 
 // @Summary      download an affiliate by ID
 // @Description  download an affiliate by ID
 // @Tags         affiliate
-// @Param        id  path  int  true  "affiliate ID"
 // @Produce      json
+// @Param        id   path      int  true  "affiliate ID"
+// @Success      200  {object}  downloadSuccess
+// @Failure      500  {object}  errorMessage
 // @Router       /download-file [get]
 func (c *ToyNoteController) DownloadAffiliate(ctx *gin.Context) {
 	idParam := ctx.Param("id")
 	id, err := strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
-		ctx.AbortWithError(http.StatusBadRequest, err)
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
 	fo, err := c.service.DownloadAffiliate(uint(id))
 	if err != nil {
 		c.logger.Error(err)
-		ctx.AbortWithError(http.StatusInternalServerError, err)
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
 	ctx.Header("Content-Disposition", "attachment; filename="+fo.Filename)
 	ctx.Data(http.StatusOK, "application/octet-stream", fo.Content)
-	ctx.JSON(http.StatusOK, gin.H{
-		"message":  "success",
-		"filename": fo.Filename,
-		"size":     fo.Size,
+	ctx.JSON(http.StatusOK, downloadSuccess{
+		Filename: fo.Filename,
+		Size:     fo.Size,
 	})
 }

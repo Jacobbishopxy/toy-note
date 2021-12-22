@@ -1,5 +1,22 @@
 basePath: /api
 definitions:
+  controller.downloadSuccess:
+    properties:
+      filename:
+        type: string
+      size:
+        type: integer
+    type: object
+  controller.errorMessage:
+    properties:
+      error:
+        type: string
+    type: object
+  controller.successMessage:
+    properties:
+      success:
+        type: string
+    type: object
   entity.Affiliate:
     properties:
       created_at:
@@ -86,10 +103,12 @@ paths:
       responses:
         "200":
           description: OK
-        "404":
-          description: Not Found
           schema:
-            type: string
+            $ref: '#/definitions/controller.successMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.errorMessage'
       summary: delete a post by ID
       tags:
       - post
@@ -107,10 +126,12 @@ paths:
       responses:
         "200":
           description: OK
-        "404":
-          description: Not Found
           schema:
-            type: string
+            $ref: '#/definitions/controller.successMessage'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.errorMessage'
       summary: delete a tag by ID
       tags:
       - tag
@@ -125,6 +146,15 @@ paths:
         type: integer
       produces:
       - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.downloadSuccess'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.errorMessage'
       summary: download an affiliate by ID
       tags:
       - affiliate
@@ -198,7 +228,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            type: string
+            $ref: '#/definitions/controller.errorMessage'
       summary: create/update a post
       tags:
       - post
@@ -223,7 +253,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            type: string
+            $ref: '#/definitions/controller.errorMessage'
       summary: create/update a tag
       tags:
       - tag

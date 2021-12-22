@@ -162,7 +162,11 @@ func (r *PgRepository) UpdateTag(tag entity.Tag) (entity.Tag, error) {
 }
 
 func (r *PgRepository) DeleteTag(id uint) error {
-	return r.db.Delete(entity.Tag{}, id).Error
+	result := r.db.Delete(entity.Tag{}, id)
+	if result.RowsAffected == 0 {
+		return fmt.Errorf("tag %d not found", id)
+	}
+	return result.Error
 }
 
 // ============================================================================

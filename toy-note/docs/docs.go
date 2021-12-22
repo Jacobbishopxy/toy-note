@@ -52,12 +52,15 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
-                    },
-                    "404": {
-                        "description": "Not Found",
+                        "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/controller.successMessage"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.errorMessage"
                         }
                     }
                 }
@@ -84,12 +87,15 @@ var doc = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK"
-                    },
-                    "404": {
-                        "description": "Not Found",
+                        "description": "OK",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/controller.successMessage"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.errorMessage"
                         }
                     }
                 }
@@ -113,7 +119,21 @@ var doc = `{
                         "in": "path",
                         "required": true
                     }
-                ]
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.downloadSuccess"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.errorMessage"
+                        }
+                    }
+                }
             }
         },
         "/get-posts": {
@@ -218,7 +238,7 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/controller.errorMessage"
                         }
                     }
                 }
@@ -255,7 +275,7 @@ var doc = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "type": "string"
+                            "$ref": "#/definitions/controller.errorMessage"
                         }
                     }
                 }
@@ -263,6 +283,33 @@ var doc = `{
         }
     },
     "definitions": {
+        "controller.downloadSuccess": {
+            "type": "object",
+            "properties": {
+                "filename": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
+        "controller.errorMessage": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.successMessage": {
+            "type": "object",
+            "properties": {
+                "success": {
+                    "type": "string"
+                }
+            }
+        },
         "entity.Affiliate": {
             "type": "object",
             "properties": {

@@ -1,6 +1,11 @@
 package entity
 
-import "time"
+import (
+	"errors"
+	"time"
+
+	"gorm.io/gorm"
+)
 
 type UnitId struct {
 	Id uint `gorm:"primaryKey;autoIncrement" json:"id,omitempty"`
@@ -9,6 +14,21 @@ type UnitId struct {
 type Dates struct {
 	CreatedAt time.Time `gorm:"autoCreateTime" json:"created_at,omitempty"`
 	UpdatedAt time.Time `gorm:"autoUpdateTime" json:"updated_at,omitempty"`
+}
+
+// make sure both created_at and updated_at cannot be manually set by user
+func (d *Dates) BeforeCreate(tx *gorm.DB) (err error) {
+	if !d.CreatedAt.IsZero() || !d.UpdatedAt.IsZero() {
+		err = errors.New("can't manually set CreatedAt or UpdatedAt")
+	}
+	return
+}
+
+func (d *Dates) BeforeUpdate(tx *gorm.DB) (err error) {
+	if !d.CreatedAt.IsZero() || !d.UpdatedAt.IsZero() {
+		err = errors.New("can't manually set CreatedAt or UpdatedAt")
+	}
+	return
 }
 
 type Pagination struct {

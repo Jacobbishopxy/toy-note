@@ -4,6 +4,13 @@ package entity
 Affiliate
 
 A pointer to a file stored in a remote storage.
+
+- id
+- object_id
+- filename
+- post_refer
+- created_at
+- updated_at
 */
 type Affiliate struct {
 	UnitId
