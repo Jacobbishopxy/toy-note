@@ -2,6 +2,12 @@
 dev:
 	cd cmd/app && go run .
 
+build:
+	cd cmd/app && go build .
+
+prod:
+	cd cmd/app && ./app -m prod
+
 install-swag:
 	go install github.com/swaggo/swag/cmd/swag@latest
 

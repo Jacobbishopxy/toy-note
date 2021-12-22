@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"toy-note/api/controller"
 	"toy-note/api/persistence"
 	"toy-note/api/service"
@@ -28,17 +29,37 @@ const envPath = "../../env"
 // @BasePath                 /api
 // @query.collection.format  multi
 func main() {
+
+	// Determine the api environment
+	mode := flag.String("m", "dev", "dev or prod")
+	flag.Parse()
+
+	var logLevel string
+
+	// set the log level and gin mode
+	if *mode == "dev" {
+		logLevel = "debug"
+		gin.SetMode(gin.DebugMode)
+	} else {
+		logLevel = "info"
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	// Initialize logger
-	if err := logger.Init("debug", logPath, false); err != nil {
+	if err := logger.Init(logLevel, logPath, false); err != nil {
 		panic(err)
 	} else {
 		defer logger.TNLogger.Sync()
 	}
 
+	// Main logger
+	log := logger.TNLogger.NewSugar("main")
+	log.Info("Starting toy-note services...")
+
 	// Load config
 	config, err := util.LoadConfig(false, envPath)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// Pg
@@ -62,13 +83,13 @@ func main() {
 	// Initialize service
 	toyNoteService, err := service.NewToyNoteService(logger.TNLogger, pgConn, mongoConn)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// Initialize controller
 	toyNoteController := controller.NewToyNoteController(logger.TNLogger, toyNoteService)
 	if err != nil {
-		panic(err)
+		log.Panic(err)
 	}
 
 	// Gin
@@ -92,5 +113,6 @@ func main() {
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Start server
+	log.Info("Starting toy-note API...")
 	router.Run()
 }
