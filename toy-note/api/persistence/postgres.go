@@ -76,16 +76,16 @@ type pgRepositoryInterface interface {
 	// Get a tag by id
 	GetTag(uint) (entity.Tag, error)
 
-	// Create a new tag
+	// Create a new tag, and return the created tag with id
 	CreateTag(entity.Tag) (entity.Tag, error)
 
-	// Update an existing tag
+	// Update an existing tag, based on id
 	UpdateTag(entity.Tag) (entity.Tag, error)
 
-	// Delete an existing tag
+	// Delete an existing tag by id
 	DeleteTag(uint) error
 
-	// Get posts by pagination
+	// Get posts by pagination, ordered by created_at desc
 	GetPosts(entity.Pagination) ([]entity.Post, error)
 
 	// Get a post by id, including tags and affiliates
@@ -94,20 +94,20 @@ type pgRepositoryInterface interface {
 	// Create a new post, and associate it with existing tags and affiliates
 	CreatePost(entity.Post) (entity.Post, error)
 
-	// Update an existing post, tags and affiliates are updated as well
+	// Update an existing post, tags and affiliates are updated as well.
 	// Using `Association` to deal with tags and affiliates, which means that
 	// all the tags and affiliates should always be given in the request.
 	// Any tags or affiliates was previously given and not given by now will be
-	// unbounded from the post. It will not be deleted, so later when we need them,
-	// we can still bind them to the post.
+	// unbounded from the post. They will not be deleted, so later if we need
+	// them to be appeared in the post, we can still bind them to the post.
 	UpdatePost(entity.Post) (entity.Post, error)
 
-	// Delete an existing post, disassociate it with all tags and delete affiliates
+	// Delete an existing post, disassociate it with all tags and affiliates
 	DeletePost(uint) error
 
 	// Create/Update a new affiliate, notice that the affiliate don't need to be
 	// associated to any post.
-	// This method should not be exposed to the user
+	// This method should not be exposed to the user.
 	SaveAffiliate(entity.Affiliate) (entity.Affiliate, error)
 
 	// Find an affiliate by id
@@ -121,6 +121,9 @@ type pgRepositoryInterface interface {
 
 	// Delete an unowned affiliate
 	DeleteUnownedAffiliates([]uint) error
+
+	// Find posts by tags
+	GetPostsByTags([]uint, entity.Pagination) ([]entity.Post, error)
 }
 
 var _ pgRepositoryInterface = (*PgRepository)(nil)
@@ -173,24 +176,40 @@ func (r *PgRepository) DeleteTag(id uint) error {
 // Post
 // ============================================================================
 
-func (r *PgRepository) GetPosts(pagination entity.Pagination) ([]entity.Post, error) {
-	var posts []entity.Post
-	// calc offset for db query
+// calculate limit and offset for db query
+func paginationToLimitOffset(pagination entity.Pagination) (int, int) {
 	offset := (pagination.Page - 1) * pagination.Size
+	return pagination.Size, offset
+}
+
+func (r *PgRepository) getPosts(ids []uint, pagination entity.Pagination) ([]entity.Post, error) {
+	var posts []entity.Post
+	// calc limit & offset
+	limit, offset := paginationToLimitOffset(pagination)
 	// preload all associations so that each post would be filled with tags and affiliates;
 	// otherwise, the tags and affiliates would be empty
-	err := r.db.
+	que := r.db.
 		Preload(clause.Associations).
-		Limit(pagination.Size).
-		Offset(offset).
-		Find(&posts).
-		Error
+		Limit(limit).
+		Offset(offset)
+
+	var err error
+
+	if len(ids) == 0 {
+		err = que.Find(&posts).Error
+	} else {
+		err = que.Where("id IN ?", ids).Find(&posts).Error
+	}
 
 	if err != nil {
 		return posts, err
 	}
 
 	return posts, nil
+}
+
+func (r *PgRepository) GetPosts(pagination entity.Pagination) ([]entity.Post, error) {
+	return r.getPosts(nil, pagination)
 }
 
 func (r *PgRepository) GetPost(id uint) (entity.Post, error) {
@@ -309,4 +328,35 @@ func (r *PgRepository) GetUnownedAffiliates(pagination entity.Pagination) ([]ent
 
 func (r *PgRepository) DeleteUnownedAffiliates(ids []uint) error {
 	return r.db.Where("post_refer IS NULL").Delete(entity.Affiliate{}, ids).Error
+}
+
+type PostsTags struct {
+	PostID uint
+	TagID  uint
+}
+
+func (r *PgRepository) GetPostsByTags(
+	tagIds []uint,
+	pagination entity.Pagination,
+) ([]entity.Post, error) {
+	var pt []PostsTags
+
+	err := r.db.
+		Raw("SELECT post_id, tag_id WHERE tag_id IN ? ORDER BY post_id", tagIds).
+		Scan(&pt).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	var postIds []uint
+	var postIdsSet = make(map[uint]bool)
+	for _, p := range pt {
+		if _, ok := postIdsSet[p.PostID]; !ok {
+			postIds = append(postIds, p.PostID)
+			postIdsSet[p.PostID] = true
+		}
+	}
+
+	return r.getPosts(postIds, pagination)
 }

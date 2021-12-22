@@ -257,4 +257,35 @@ paths:
       summary: create/update a tag
       tags:
       - tag
+  /search-posts-by-tags:
+    get:
+      description: get posts by tags
+      parameters:
+      - description: page number
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: page size
+        in: query
+        name: size
+        required: true
+        type: integer
+      - description: tag ids
+        in: query
+        name: ids
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Post'
+            type: array
+      summary: get posts by tags
+      tags:
+      - post
 swagger: "2.0"

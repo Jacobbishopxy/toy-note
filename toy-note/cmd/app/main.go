@@ -107,6 +107,8 @@ func main() {
 		api.DELETE("/delete-post/:id", toyNoteController.DeletePost)
 
 		api.GET("/download-file/:id", toyNoteController.DownloadAffiliate)
+
+		api.GET("/search-posts-by-tags", toyNoteController.SearchPostsByTags)
 	}
 
 	// Swagger documention

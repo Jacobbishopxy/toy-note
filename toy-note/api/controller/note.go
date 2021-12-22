@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"toy-note/api/entity"
 	"toy-note/api/service"
 	"toy-note/logger"
@@ -109,13 +110,12 @@ func (c *ToyNoteController) DeleteTag(ctx *gin.Context) {
 // @Summary      get all posts
 // @Description  get all posts
 // @Tags         post
-// @Param        page  query  int  true  "page number"
-// @Param        size  query  int  true  "page size"
+// @Param        page  query  int     true  "page number"
+// @Param        size  query  int     true  "page size"
 // @Produce      json
 // @Success      200  {array}  entity.Post
 // @Router       /get-posts [get]
 func (c *ToyNoteController) GetPosts(ctx *gin.Context) {
-
 	// get pagination's page from query string
 	pageQuery := ctx.Query("page")
 	page, err := strconv.ParseInt(pageQuery, 10, 64)
@@ -297,4 +297,58 @@ func (c *ToyNoteController) DownloadAffiliate(ctx *gin.Context) {
 		Filename: fo.Filename,
 		Size:     fo.Size,
 	})
+}
+
+// @Summary      get posts by tags
+// @Description  get posts by tags
+// @Tags         post
+// @Param        page  query  int  true  "page number"
+// @Param        size  query  int  true  "page size"
+// @Param        ids   query  string  true  "tag ids"
+// @Produce      json
+// @Success      200  {array}  entity.Post
+// @Router       /search-posts-by-tags [get]
+func (c *ToyNoteController) SearchPostsByTags(ctx *gin.Context) {
+	// get pagination's page from query string
+	pageQuery := ctx.Query("page")
+	page, err := strconv.ParseInt(pageQuery, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	// get pagination's size from query string
+	sizeQuery := ctx.Query("size")
+	size, err := strconv.ParseInt(sizeQuery, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	pagination := entity.Pagination{
+		Page: int(page),
+		Size: int(size),
+	}
+
+	idsQuery := ctx.Query("ids")
+	ids := strings.Split(idsQuery, ",")
+	var idsUint []uint
+	for _, id := range ids {
+		idUint, err := strconv.ParseUint(id, 10, 64)
+		if err != nil {
+			c.logger.Error(err)
+			ctx.JSON(http.StatusBadRequest, errorResponse(err))
+			return
+		}
+		idsUint = append(idsUint, uint(idUint))
+	}
+
+	posts, err := c.service.SearchPostsByTags(idsUint, pagination)
+	if err != nil {
+		c.logger.Error(err)
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, posts)
 }

@@ -45,4 +45,10 @@ type ToyNoteRepo interface {
 
 	// [admin] Remove affiliates, which will remove affiliates files from mongo as well
 	DeleteUnownedAffiliates([]uint) error
+
+	// Search posts by tags
+	SearchPostsByTags([]uint, entity.Pagination) ([]entity.Post, error)
+
+	// TODO:
+	// Search posts by title
 }
