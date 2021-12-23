@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"net/http"
+	"errors"
 	"strconv"
 	"toy-note/api/entity"
 
@@ -10,18 +10,22 @@ import (
 
 func getPaginationFromQuery(ctx *gin.Context) (entity.Pagination, error) {
 	// get pagination's page from query string
-	pageQuery := ctx.Query("page")
+	pageQuery, v := ctx.GetQuery("page")
+	if !v {
+		return entity.Pagination{}, errors.New("page query is required")
+	}
 	page, err := strconv.ParseInt(pageQuery, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return entity.Pagination{}, err
 	}
 
 	// get pagination's size from query string
-	sizeQuery := ctx.Query("size")
+	sizeQuery, v := ctx.GetQuery("size")
+	if !v {
+		return entity.Pagination{}, errors.New("size query is required")
+	}
 	size, err := strconv.ParseInt(sizeQuery, 10, 64)
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return entity.Pagination{}, err
 	}
 

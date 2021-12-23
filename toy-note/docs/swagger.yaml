@@ -26,6 +26,7 @@ definitions:
       id:
         type: integer
       object_id:
+        description: ObjectId  string `gorm:"not null" json:"object_id"`
         type: string
       post_refer:
         type: integer
@@ -209,11 +210,10 @@ paths:
         Form-data should also be provided if the post has any new affiliate.
       parameters:
       - description: post data
-        in: body
+        in: formData
         name: data
         required: true
-        schema:
-          $ref: '#/definitions/entity.Post'
+        type: string
       - description: affiliate files
         in: formData
         name: files

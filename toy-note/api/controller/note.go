@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -110,31 +112,17 @@ func (c *ToyNoteController) DeleteTag(ctx *gin.Context) {
 // @Summary      get all posts
 // @Description  get all posts
 // @Tags         post
-// @Param        page  query  int     true  "page number"
-// @Param        size  query  int     true  "page size"
+// @Param        page   query  int     true  "page number"
+// @Param        size   query  int     true  "page size"
 // @Produce      json
 // @Success      200  {array}  entity.Post
 // @Router       /get-posts [get]
 func (c *ToyNoteController) GetPosts(ctx *gin.Context) {
-	// get pagination's page from query string
-	pageQuery := ctx.Query("page")
-	page, err := strconv.ParseInt(pageQuery, 10, 64)
+	pagination, err := getPaginationFromQuery(ctx)
 	if err != nil {
+		c.logger.Error(err)
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
-	}
-
-	// get pagination's size from query string
-	sizeQuery := ctx.Query("size")
-	size, err := strconv.ParseInt(sizeQuery, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	pagination := entity.Pagination{
-		Page: int(page),
-		Size: int(size),
 	}
 
 	// get post from service
@@ -155,8 +143,8 @@ func (c *ToyNoteController) GetPosts(ctx *gin.Context) {
 // @Tags         post
 // @Accept       multipart/form-data
 // @Produce      json
-// @Param        data   body      entity.Post  true   "post data"
-// @Param        files  formData  file         false  "affiliate files"
+// @Param        data   formData  string  true   "post data"
+// @Param        files  formData  file    false  "affiliate files"
 // @Success      200    {object}  entity.Post
 // @Failure      400   {object}  errorMessage
 // @Router       /save-post [post]
@@ -170,9 +158,22 @@ func (c *ToyNoteController) SavePost(ctx *gin.Context) {
 	}
 
 	files := form.File["files"]
+	data := form.Value["data"]
+	if len(data) < 1 {
+		err := errors.New("filed: data is missing")
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
 
 	// get post from request body
 	var post entity.Post
+
+	err = json.Unmarshal([]byte(data[0]), &post)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, nil)
+		return
+	}
+
 	if err := ctx.ShouldBindJSON(&post); err != nil {
 		c.logger.Error(err)
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -302,8 +303,8 @@ func (c *ToyNoteController) DownloadAffiliate(ctx *gin.Context) {
 // @Summary      get posts by tags
 // @Description  get posts by tags
 // @Tags         post
-// @Param        page   query  int     true  "page number"
-// @Param        size   query  int     true  "page size"
+// @Param        page  query  int     true  "page number"
+// @Param        size  query  int     true  "page size"
 // @Param        ids   query  string  true  "tag ids"
 // @Produce      json
 // @Success      200  {array}  entity.Post

@@ -213,13 +213,11 @@ var doc = `{
                 "summary": "create/update a post",
                 "parameters": [
                     {
+                        "type": "string",
                         "description": "post data",
                         "name": "data",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/entity.Post"
-                        }
+                        "in": "formData",
+                        "required": true
                     },
                     {
                         "type": "file",
@@ -415,6 +413,7 @@ var doc = `{
                     "type": "integer"
                 },
                 "object_id": {
+                    "description": "ObjectId  string ` + "`" + `gorm:\"not null\" json:\"object_id\"` + "`" + `",
                     "type": "string"
                 },
                 "post_refer": {
