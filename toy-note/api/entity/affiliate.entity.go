@@ -13,7 +13,7 @@ A pointer to a file stored in a remote storage.
 - updated_at
 */
 type Affiliate struct {
-	UnitId
+	UintId
 	ObjectId  string `json:"object_id,omitempty"`
 	Filename  string `gorm:"not null" json:"filename"`
 	PostRefer uint   `json:"post_refer,omitempty"`

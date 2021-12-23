@@ -17,7 +17,7 @@ A data structure used for storing notes.
 - updated_at
 */
 type Post struct {
-	UnitId
+	UintId
 	Title      string      `gorm:"size:100;not null" json:"title"`
 	Subtitle   string      `gorm:"size:100" json:"subtitle,omitempty"`
 	Content    string      `gorm:"text;not null" json:"content"`

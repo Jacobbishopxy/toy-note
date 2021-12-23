@@ -49,6 +49,6 @@ type ToyNoteRepo interface {
 	// Search posts by tags
 	SearchPostsByTags([]uint, entity.Pagination) ([]entity.Post, error)
 
-	// TODO:
 	// Search posts by title
+	SearchPostsByTitle(string, entity.Pagination) ([]entity.Post, error)
 }

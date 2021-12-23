@@ -109,6 +109,7 @@ func main() {
 		api.GET("/download-file/:id", toyNoteController.DownloadAffiliate)
 
 		api.GET("/search-posts-by-tags", toyNoteController.SearchPostsByTags)
+		api.GET("/search-posts-by-title", toyNoteController.SearchPostsByTitle)
 	}
 
 	// Swagger documention

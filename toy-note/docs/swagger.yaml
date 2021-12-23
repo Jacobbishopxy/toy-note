@@ -288,4 +288,35 @@ paths:
       summary: get posts by tags
       tags:
       - post
+  /search-posts-by-title:
+    get:
+      description: get posts by title
+      parameters:
+      - description: page number
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: page size
+        in: query
+        name: size
+        required: true
+        type: integer
+      - description: post title
+        in: query
+        name: title
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Post'
+            type: array
+      summary: get posts by title
+      tags:
+      - post
 swagger: "2.0"

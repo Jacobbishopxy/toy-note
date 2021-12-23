@@ -96,7 +96,7 @@ func TestUpdateTag(t *testing.T) {
 	require.NoError(t, err)
 
 	tag := entity.Tag{
-		UnitId:      entity.UnitId{Id: 2},
+		UintId:      entity.UintId{Id: 2},
 		Name:        "dev+",
 		Description: "#2 ,edited",
 	}
@@ -121,6 +121,7 @@ func TestDeleteTag(t *testing.T) {
 // - TestGetAllPosts
 // - TestUpdatePost
 // - TestDeletePost
+// - TestGetPostsByTags
 // ============================================================================
 
 func TestCreatePost(t *testing.T) {
@@ -142,7 +143,7 @@ func TestCreatePost(t *testing.T) {
 		},
 		Tags: []entity.Tag{
 			{
-				UnitId: entity.UnitId{Id: 1},
+				UintId: entity.UintId{Id: 1},
 			},
 		},
 	}
@@ -158,10 +159,10 @@ func TestCreatePost(t *testing.T) {
 		},
 		Tags: []entity.Tag{
 			{
-				UnitId: entity.UnitId{Id: 1},
+				UintId: entity.UintId{Id: 1},
 			},
 			{
-				UnitId: entity.UnitId{Id: 2},
+				UintId: entity.UintId{Id: 2},
 			},
 		},
 	}
@@ -200,11 +201,11 @@ func TestUpdatePost(t *testing.T) {
 	// - affiliates #3 removed
 	// - tag #1 removed
 	newPost := entity.Post{
-		UnitId:  entity.UnitId{Id: 2},
+		UintId:  entity.UintId{Id: 2},
 		Content: "updated content",
 		Tags: []entity.Tag{
 			{
-				UnitId: entity.UnitId{Id: 2},
+				UintId: entity.UintId{Id: 2},
 			},
 		},
 	}
@@ -229,6 +230,26 @@ func TestDeletePost(t *testing.T) {
 
 	err = r.DeletePost(2)
 	require.NoError(t, err)
+}
+
+func TestGetPostsByTags(t *testing.T) {
+	r, err := newPgRepo()
+	require.NoError(t, err)
+
+	posts, err := r.GetPostsByTags([]uint{1, 2}, entity.NewPagination(0, 10))
+	require.NoError(t, err)
+	require.Len(t, posts, 1)
+	require.Equal(t, posts[0].Id, uint(2))
+}
+
+func TestGetPostsByTitle(t *testing.T) {
+	r, err := newPgRepo()
+	require.NoError(t, err)
+
+	posts, err := r.GetPostsByTitle("first", entity.NewPagination(0, 10))
+	require.NoError(t, err)
+	require.Len(t, posts, 1)
+	require.Equal(t, posts[0].Id, uint(1))
 }
 
 // ============================================================================

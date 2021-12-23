@@ -164,3 +164,7 @@ func (s *ToyNoteService) DeleteUnownedAffiliates(ids []uint) error {
 func (s *ToyNoteService) SearchPostsByTags(tagIds []uint, pagination entity.Pagination) ([]entity.Post, error) {
 	return s.pg.GetPostsByTags(tagIds, pagination)
 }
+
+func (s *ToyNoteService) SearchPostsByTitle(title string, pagination entity.Pagination) ([]entity.Post, error) {
+	return s.pg.GetPostsByTitle(title, pagination)
+}

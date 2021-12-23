@@ -332,30 +332,50 @@ func (r *PgRepository) DeleteUnownedAffiliates(ids []uint) error {
 
 type PostsTags struct {
 	PostID uint
-	TagID  uint
 }
+
+const searchByTagQuery = `
+SELECT
+	post_id
+FROM
+	posts_tags
+WHERE
+	tag_id IN ?
+GROUP BY
+	post_id
+HAVING
+	count(distinct tag_id) = ?
+`
 
 func (r *PgRepository) GetPostsByTags(
 	tagIds []uint,
 	pagination entity.Pagination,
 ) ([]entity.Post, error) {
-	var pt []PostsTags
+	var postIds []uint
 
 	err := r.db.
-		Raw("SELECT post_id, tag_id WHERE tag_id IN ? ORDER BY post_id", tagIds).
-		Scan(&pt).
+		Raw(searchByTagQuery, tagIds, len(tagIds)).
+		Scan(&postIds).
 		Error
 	if err != nil {
 		return nil, err
 	}
 
+	return r.getPosts(postIds, pagination)
+}
+
+func (r *PgRepository) GetPostsByTitle(
+	title string,
+	pagination entity.Pagination,
+) ([]entity.Post, error) {
 	var postIds []uint
-	var postIdsSet = make(map[uint]bool)
-	for _, p := range pt {
-		if _, ok := postIdsSet[p.PostID]; !ok {
-			postIds = append(postIds, p.PostID)
-			postIdsSet[p.PostID] = true
-		}
+
+	err := r.db.
+		Raw("SELECT id FROM posts WHERE title LIKE ?", "%"+title+"%").
+		Scan(&postIds).
+		Error
+	if err != nil {
+		return nil, err
 	}
 
 	return r.getPosts(postIds, pagination)

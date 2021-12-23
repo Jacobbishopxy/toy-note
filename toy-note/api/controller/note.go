@@ -302,32 +302,18 @@ func (c *ToyNoteController) DownloadAffiliate(ctx *gin.Context) {
 // @Summary      get posts by tags
 // @Description  get posts by tags
 // @Tags         post
-// @Param        page  query  int  true  "page number"
-// @Param        size  query  int  true  "page size"
+// @Param        page   query  int     true  "page number"
+// @Param        size   query  int     true  "page size"
 // @Param        ids   query  string  true  "tag ids"
 // @Produce      json
 // @Success      200  {array}  entity.Post
 // @Router       /search-posts-by-tags [get]
 func (c *ToyNoteController) SearchPostsByTags(ctx *gin.Context) {
-	// get pagination's page from query string
-	pageQuery := ctx.Query("page")
-	page, err := strconv.ParseInt(pageQuery, 10, 64)
+	pagination, err := getPaginationFromQuery(ctx)
 	if err != nil {
+		c.logger.Error(err)
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
-	}
-
-	// get pagination's size from query string
-	sizeQuery := ctx.Query("size")
-	size, err := strconv.ParseInt(sizeQuery, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	pagination := entity.Pagination{
-		Page: int(page),
-		Size: int(size),
 	}
 
 	idsQuery := ctx.Query("ids")
@@ -344,6 +330,35 @@ func (c *ToyNoteController) SearchPostsByTags(ctx *gin.Context) {
 	}
 
 	posts, err := c.service.SearchPostsByTags(idsUint, pagination)
+	if err != nil {
+		c.logger.Error(err)
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, posts)
+}
+
+// @Summary      get posts by title
+// @Description  get posts by title
+// @Tags         post
+// @Param        page  query  int  true  "page number"
+// @Param        size  query  int  true  "page size"
+// @Param        title  query  string  true  "post title"
+// @Produce      json
+// @Success      200  {array}  entity.Post
+// @Router       /search-posts-by-title [get]
+func (c *ToyNoteController) SearchPostsByTitle(ctx *gin.Context) {
+	pagination, err := getPaginationFromQuery(ctx)
+	if err != nil {
+		c.logger.Error(err)
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	titleQuery := ctx.Query("title")
+
+	posts, err := c.service.SearchPostsByTitle(titleQuery, pagination)
 	if err != nil {
 		c.logger.Error(err)
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))

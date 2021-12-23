@@ -7,7 +7,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type UnitId struct {
+type UintId struct {
 	Id uint `gorm:"primaryKey;autoIncrement" json:"id,omitempty"`
 }
 
