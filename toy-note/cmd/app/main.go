@@ -110,6 +110,7 @@ func main() {
 
 		api.GET("/search-posts-by-tags", toyNoteController.SearchPostsByTags)
 		api.GET("/search-posts-by-title", toyNoteController.SearchPostsByTitle)
+		api.GET("/search-posts-by-time", toyNoteController.SearchPostsByTime)
 	}
 
 	// Swagger documention

@@ -168,3 +168,7 @@ func (s *ToyNoteService) SearchPostsByTags(tagIds []uint, pagination entity.Pagi
 func (s *ToyNoteService) SearchPostsByTitle(title string, pagination entity.Pagination) ([]entity.Post, error) {
 	return s.pg.GetPostsByTitle(title, pagination)
 }
+
+func (s *ToyNoteService) SearchPostsByTimeRange(timeSearch entity.TimeSearch, pagination entity.Pagination) ([]entity.Post, error) {
+	return s.pg.GetPostsByTimeRange(timeSearch, pagination)
+}

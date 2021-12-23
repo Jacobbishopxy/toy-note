@@ -48,3 +48,17 @@ type FileObject struct {
 	Content  []byte
 	Size     int64
 }
+
+type TimeType uint
+
+const (
+	DATE TimeType = iota
+	CREATE
+	MODIFY
+)
+
+type TimeSearch struct {
+	Start time.Time
+	End   time.Time
+	Type  TimeType
+}

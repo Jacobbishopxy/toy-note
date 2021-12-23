@@ -51,4 +51,7 @@ type ToyNoteRepo interface {
 
 	// Search posts by title
 	SearchPostsByTitle(string, entity.Pagination) ([]entity.Post, error)
+
+	// Search posts by time range
+	SearchPostsByTimeRange(entity.TimeSearch, entity.Pagination) ([]entity.Post, error)
 }

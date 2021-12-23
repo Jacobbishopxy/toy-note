@@ -325,6 +325,65 @@ var doc = `{
                 }
             }
         },
+        "/search-posts-by-time": {
+            "get": {
+                "description": "get posts by title",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "post"
+                ],
+                "summary": "get posts by title",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "page number",
+                        "name": "page",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "page size",
+                        "name": "size",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "time start",
+                        "name": "start",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "time end",
+                        "name": "end",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "time type",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/entity.Post"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/search-posts-by-title": {
             "get": {
                 "description": "get posts by title",
@@ -413,7 +472,6 @@ var doc = `{
                     "type": "integer"
                 },
                 "object_id": {
-                    "description": "ObjectId  string ` + "`" + `gorm:\"not null\" json:\"object_id\"` + "`" + `",
                     "type": "string"
                 },
                 "post_refer": {

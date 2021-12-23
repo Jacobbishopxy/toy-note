@@ -26,7 +26,6 @@ definitions:
       id:
         type: integer
       object_id:
-        description: ObjectId  string `gorm:"not null" json:"object_id"`
         type: string
       post_refer:
         type: integer
@@ -286,6 +285,46 @@ paths:
               $ref: '#/definitions/entity.Post'
             type: array
       summary: get posts by tags
+      tags:
+      - post
+  /search-posts-by-time:
+    get:
+      description: get posts by title
+      parameters:
+      - description: page number
+        in: query
+        name: page
+        required: true
+        type: integer
+      - description: page size
+        in: query
+        name: size
+        required: true
+        type: integer
+      - description: time start
+        in: query
+        name: start
+        required: true
+        type: string
+      - description: time end
+        in: query
+        name: end
+        required: true
+        type: string
+      - description: time type
+        in: query
+        name: type
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/entity.Post'
+            type: array
+      summary: get posts by title
       tags:
       - post
   /search-posts-by-title:

@@ -124,6 +124,12 @@ type pgRepositoryInterface interface {
 
 	// Find posts by tags
 	GetPostsByTags([]uint, entity.Pagination) ([]entity.Post, error)
+
+	// Find posts by title
+	GetPostsByTitle(string, entity.Pagination) ([]entity.Post, error)
+
+	// Find posts by time range
+	GetPostsByTimeRange(entity.TimeSearch, entity.Pagination) ([]entity.Post, error)
 }
 
 var _ pgRepositoryInterface = (*PgRepository)(nil)
@@ -372,6 +378,40 @@ func (r *PgRepository) GetPostsByTitle(
 
 	err := r.db.
 		Raw("SELECT id FROM posts WHERE title LIKE ?", "%"+title+"%").
+		Scan(&postIds).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	return r.getPosts(postIds, pagination)
+}
+
+func (r *PgRepository) GetPostsByTimeRange(
+	timeSearch entity.TimeSearch,
+	pagination entity.Pagination,
+) ([]entity.Post, error) {
+	var postIds []uint
+
+	var d string
+	switch timeSearch.Type {
+	case 0:
+		d = "date"
+	case 1:
+		d = "created_at"
+	case 2:
+		d = "updated_at"
+	default:
+		d = "date"
+	}
+
+	err := r.db.
+		Raw(
+			"SELECT id FROM posts WHERE ? BETWEEN ? AND ?",
+			d,
+			timeSearch.Start,
+			timeSearch.End,
+		).
 		Scan(&postIds).
 		Error
 	if err != nil {

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 	"toy-note/api/entity"
 	"toy-note/api/service"
 	"toy-note/logger"
@@ -112,8 +111,8 @@ func (c *ToyNoteController) DeleteTag(ctx *gin.Context) {
 // @Summary      get all posts
 // @Description  get all posts
 // @Tags         post
-// @Param        page   query  int     true  "page number"
-// @Param        size   query  int     true  "page size"
+// @Param        page   query  int     true   "page number"
+// @Param        size   query  int     true   "page size"
 // @Produce      json
 // @Success      200  {array}  entity.Post
 // @Router       /get-posts [get]
@@ -317,8 +316,7 @@ func (c *ToyNoteController) SearchPostsByTags(ctx *gin.Context) {
 		return
 	}
 
-	idsQuery := ctx.Query("ids")
-	ids := strings.Split(idsQuery, ",")
+	ids := ctx.QueryArray("ids")
 	var idsUint []uint
 	for _, id := range ids {
 		idUint, err := strconv.ParseUint(id, 10, 64)
@@ -343,8 +341,8 @@ func (c *ToyNoteController) SearchPostsByTags(ctx *gin.Context) {
 // @Summary      get posts by title
 // @Description  get posts by title
 // @Tags         post
-// @Param        page  query  int  true  "page number"
-// @Param        size  query  int  true  "page size"
+// @Param        page   query  int     true  "page number"
+// @Param        size   query  int     true  "page size"
 // @Param        title  query  string  true  "post title"
 // @Produce      json
 // @Success      200  {array}  entity.Post
@@ -360,6 +358,42 @@ func (c *ToyNoteController) SearchPostsByTitle(ctx *gin.Context) {
 	titleQuery := ctx.Query("title")
 
 	posts, err := c.service.SearchPostsByTitle(titleQuery, pagination)
+	if err != nil {
+		c.logger.Error(err)
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, posts)
+}
+
+// @Summary      get posts by title
+// @Description  get posts by title
+// @Tags         post
+// @Param        page  query  int  true  "page number"
+// @Param        size  query  int  true  "page size"
+// @Param        start  query  string  true   "time start"
+// @Param        end    query  string  true   "time end"
+// @Param        type   query  string  false  "time type"
+// @Produce      json
+// @Success      200  {array}  entity.Post
+// @Router       /search-posts-by-time [get]
+func (c *ToyNoteController) SearchPostsByTime(ctx *gin.Context) {
+	pagination, err := getPaginationFromQuery(ctx)
+	if err != nil {
+		c.logger.Error(err)
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	timeType, err := getTimeSearchFromQuery(ctx)
+	if err != nil {
+		c.logger.Error(err)
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	posts, err := c.service.SearchPostsByTimeRange(timeType, pagination)
 	if err != nil {
 		c.logger.Error(err)
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
