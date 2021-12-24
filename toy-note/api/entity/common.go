@@ -31,6 +31,7 @@ func (d *Dates) BeforeUpdate(tx *gorm.DB) (err error) {
 	return
 }
 
+// request from frontend
 type Pagination struct {
 	Page int
 	Size int
@@ -43,6 +44,7 @@ func NewPagination(page, size int) Pagination {
 	}
 }
 
+// response to frontend
 type FileObject struct {
 	Filename string
 	Content  []byte

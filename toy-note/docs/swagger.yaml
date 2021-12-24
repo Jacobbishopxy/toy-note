@@ -160,7 +160,7 @@ paths:
       - affiliate
   /get-posts:
     get:
-      description: get all posts
+      description: get all posts with pagination restriction
       parameters:
       - description: page number
         in: query
@@ -186,7 +186,7 @@ paths:
       - post
   /get-tags:
     get:
-      description: get all tags
+      description: get all tags without limit or offset
       produces:
       - application/json
       responses:
@@ -205,8 +205,8 @@ paths:
       - multipart/form-data
       description: |-
         Save post can be used to create a new post or update an existing post.
-        If id is not provided, it will create a new post; Otherwise, it will update an existing post.
-        Form-data should also be provided if the post has any new affiliate.
+        If id is not provided, it will create a new post; Otherwise, it will update
+        an existing post.
       parameters:
       - description: post data
         in: formData
@@ -233,6 +233,8 @@ paths:
       - post
   /save-tag:
     post:
+      consumes:
+      - application/json
       description: create a new tag or update an existing tag, based on whether the
         tag ID is provided
       parameters:

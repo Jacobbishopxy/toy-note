@@ -6,9 +6,9 @@ Affiliate
 A pointer to a file stored in a remote storage.
 
 - id
-- object_id
+- object_id: represents the id saved in MongoDB,
 - filename
-- post_refer
+- post_refer: many-to-one relationship
 - created_at
 - updated_at
 */

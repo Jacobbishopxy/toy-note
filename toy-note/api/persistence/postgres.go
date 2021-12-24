@@ -188,6 +188,7 @@ func paginationToLimitOffset(pagination entity.Pagination) (int, int) {
 	return pagination.Size, offset
 }
 
+// private method
 func (r *PgRepository) getPosts(ids []uint, pagination entity.Pagination) ([]entity.Post, error) {
 	var posts []entity.Post
 	// calc limit & offset
@@ -236,7 +237,7 @@ func (r *PgRepository) CreatePost(post entity.Post) (entity.Post, error) {
 }
 
 func (r *PgRepository) UpdatePost(post entity.Post) (entity.Post, error) {
-
+	// transaction here to make sure all the data modification is atomic
 	r.db.Transaction(func(tx *gorm.DB) error {
 		// update tags by replacing it
 		if err := tx.Model(&post).Association("Tags").Replace(post.Tags); err != nil {
@@ -259,7 +260,7 @@ func (r *PgRepository) UpdatePost(post entity.Post) (entity.Post, error) {
 }
 
 func (r *PgRepository) DeletePost(id uint) error {
-
+	// transaction here to make sure all the data deletion is atomic
 	return r.db.Transaction(func(tx *gorm.DB) error {
 
 		var post entity.Post
@@ -267,14 +268,17 @@ func (r *PgRepository) DeletePost(id uint) error {
 			return err
 		}
 
+		// do not delete data, but unbound from the post
 		if err := tx.Model(&post).Association("Tags").Clear(); err != nil {
 			return err
 		}
 
+		// do not delete data, but unbound from the post
 		if err := tx.Model(&post).Association("Affiliates").Clear(); err != nil {
 			return err
 		}
 
+		// delete post
 		if err := tx.Delete(&post).Error; err != nil {
 			return err
 		}

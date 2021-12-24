@@ -60,6 +60,7 @@ func Init(logLevel string, logFile string, dev bool) error {
 		zapcore.NewJSONEncoder(encoderConfig),
 		// write to stdout as well as log files
 		zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), ws),
+		// shorten of create AtomicLevel and set level
 		zap.NewAtomicLevelAt(level),
 	)
 

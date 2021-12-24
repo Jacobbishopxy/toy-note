@@ -11,6 +11,13 @@ import (
 	"go.uber.org/zap"
 )
 
+/*
+Service layer
+
+Combining methods provided by persistence and providing business logic implementation.
+In fact, for most of the small projects, service layer is not a necessity, because business
+logic is almost the same as persistence layer's methods.
+*/
 type ToyNoteService struct {
 	logger *zap.SugaredLogger
 	pg     *persistence.PgRepository
@@ -52,6 +59,7 @@ func (s *ToyNoteService) Init() error {
 	return nil
 }
 
+// make sure `ToyNoteService` implements all methods required by `ToyNoteRepo` interface
 var _ ToyNoteRepo = (*ToyNoteService)(nil)
 
 func (s *ToyNoteService) GetTags() ([]entity.Tag, error) {

@@ -38,7 +38,7 @@ func NewToyNoteController(
 // ============================================================================
 
 // @Summary      get all tags
-// @Description  get all tags
+// @Description  get all tags without limit or offset
 // @Tags         tag
 // @Produce      json
 // @Success      200  {array}  entity.Tag
@@ -57,6 +57,7 @@ func (c *ToyNoteController) GetTags(ctx *gin.Context) {
 // @Summary      create/update a tag
 // @Description  create a new tag or update an existing tag, based on whether the tag ID is provided
 // @Tags         tag
+// @Accept       json
 // @Produce      json
 // @Param        data  body      entity.Tag  true  "tag data"
 // @Success      200   {object}  entity.Tag
@@ -109,7 +110,7 @@ func (c *ToyNoteController) DeleteTag(ctx *gin.Context) {
 // ============================================================================
 
 // @Summary      get all posts
-// @Description  get all posts
+// @Description  get all posts with pagination restriction
 // @Tags         post
 // @Param        page   query  int     true   "page number"
 // @Param        size   query  int     true   "page size"
@@ -137,8 +138,8 @@ func (c *ToyNoteController) GetPosts(ctx *gin.Context) {
 
 // @Summary      create/update a post
 // @Description  Save post can be used to create a new post or update an existing post.
-// @Description  If id is not provided, it will create a new post; Otherwise, it will update an existing post.
-// @Description  Form-data should also be provided if the post has any new affiliate.
+// @Description  If id is not provided, it will create a new post; Otherwise, it will update
+// @Description     an existing post.
 // @Tags         post
 // @Accept       multipart/form-data
 // @Produce      json
@@ -156,7 +157,8 @@ func (c *ToyNoteController) SavePost(ctx *gin.Context) {
 		return
 	}
 
-	files := form.File["files"]
+	// get `entity.Post` from "data" field, default data is an array of string.
+	// if multiple values are provided, we shall only take the first one.
 	data := form.Value["data"]
 	if len(data) < 1 {
 		err := errors.New("filed: data is missing")
@@ -164,20 +166,23 @@ func (c *ToyNoteController) SavePost(ctx *gin.Context) {
 		return
 	}
 
-	// get post from request body
+	// unmarshal: string -> json
 	var post entity.Post
-
 	err = json.Unmarshal([]byte(data[0]), &post)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, nil)
 		return
 	}
 
+	// bind json to `post`
 	if err := ctx.ShouldBindJSON(&post); err != nil {
 		c.logger.Error(err)
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
+
+	// get files from "files" field, accepting multiple "files" fields
+	files := form.File["files"]
 
 	// check if new affiliates has the same length as multipart form's length
 	newAffiliatesLen := 0
@@ -268,37 +273,6 @@ func (c *ToyNoteController) DeletePost(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, successResponse(id))
 }
 
-// @Summary      download an affiliate by ID
-// @Description  download an affiliate by ID
-// @Tags         affiliate
-// @Produce      json
-// @Param        id   path      int  true  "affiliate ID"
-// @Success      200  {object}  downloadSuccess
-// @Failure      500  {object}  errorMessage
-// @Router       /download-file [get]
-func (c *ToyNoteController) DownloadAffiliate(ctx *gin.Context) {
-	idParam := ctx.Param("id")
-	id, err := strconv.ParseUint(idParam, 10, 64)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	fo, err := c.service.DownloadAffiliate(uint(id))
-	if err != nil {
-		c.logger.Error(err)
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
-
-	ctx.Header("Content-Disposition", "attachment; filename="+fo.Filename)
-	ctx.Data(http.StatusOK, "application/octet-stream", fo.Content)
-	ctx.JSON(http.StatusOK, downloadSuccess{
-		Filename: fo.Filename,
-		Size:     fo.Size,
-	})
-}
-
 // @Summary      get posts by tags
 // @Description  get posts by tags
 // @Tags         post
@@ -316,6 +290,7 @@ func (c *ToyNoteController) SearchPostsByTags(ctx *gin.Context) {
 		return
 	}
 
+	// ids is an array of uint
 	ids := ctx.QueryArray("ids")
 	var idsUint []uint
 	for _, id := range ids {
@@ -355,7 +330,12 @@ func (c *ToyNoteController) SearchPostsByTitle(ctx *gin.Context) {
 		return
 	}
 
-	titleQuery := ctx.Query("title")
+	titleQuery, v := ctx.GetQuery("title")
+	if !v {
+		err := errors.New("title query is required")
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
 
 	posts, err := c.service.SearchPostsByTitle(titleQuery, pagination)
 	if err != nil {
@@ -401,4 +381,39 @@ func (c *ToyNoteController) SearchPostsByTime(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, posts)
+}
+
+// ============================================================================
+// Affiliate
+// ============================================================================
+
+// @Summary      download an affiliate by ID
+// @Description  download an affiliate by ID
+// @Tags         affiliate
+// @Produce      json
+// @Param        id   path      int  true  "affiliate ID"
+// @Success      200  {object}  downloadSuccess
+// @Failure      500  {object}  errorMessage
+// @Router       /download-file [get]
+func (c *ToyNoteController) DownloadAffiliate(ctx *gin.Context) {
+	idParam := ctx.Param("id")
+	id, err := strconv.ParseUint(idParam, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	fo, err := c.service.DownloadAffiliate(uint(id))
+	if err != nil {
+		c.logger.Error(err)
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.Header("Content-Disposition", "attachment; filename="+fo.Filename)
+	ctx.Data(http.StatusOK, "application/octet-stream", fo.Content)
+	ctx.JSON(http.StatusOK, downloadSuccess{
+		Filename: fo.Filename,
+		Size:     fo.Size,
+	})
 }

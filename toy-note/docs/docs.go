@@ -138,7 +138,7 @@ var doc = `{
         },
         "/get-posts": {
             "get": {
-                "description": "get all posts",
+                "description": "get all posts with pagination restriction",
                 "produces": [
                     "application/json"
                 ],
@@ -177,7 +177,7 @@ var doc = `{
         },
         "/get-tags": {
             "get": {
-                "description": "get all tags",
+                "description": "get all tags without limit or offset",
                 "produces": [
                     "application/json"
                 ],
@@ -200,7 +200,7 @@ var doc = `{
         },
         "/save-post": {
             "post": {
-                "description": "Save post can be used to create a new post or update an existing post.\nIf id is not provided, it will create a new post; Otherwise, it will update an existing post.\nForm-data should also be provided if the post has any new affiliate.",
+                "description": "Save post can be used to create a new post or update an existing post.\nIf id is not provided, it will create a new post; Otherwise, it will update\nan existing post.",
                 "consumes": [
                     "multipart/form-data"
                 ],
@@ -245,6 +245,9 @@ var doc = `{
         "/save-tag": {
             "post": {
                 "description": "create a new tag or update an existing tag, based on whether the tag ID is provided",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
